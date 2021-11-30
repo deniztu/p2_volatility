@@ -5,7 +5,7 @@ experiments
 plots
 results
 documentation
-tensorboard
+tensorboard/*
 
 # exclude everything
 data/human_raw_data/*
@@ -16,4 +16,4 @@ data/rnn_raw_data/*
 data/human_raw_data/*
 data/human_raw_data/*
 cognitive_models/*
-saved_model/*
+saved_models/*

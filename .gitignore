@@ -16,8 +16,4 @@ data/rnn_raw_data/*
 data/human_raw_data/*
 data/human_raw_data/*
 cognitive_models/*
-save_models/*
 saved_model/*
-
-# exception to the rule
-# !somefolder/.gitkeep 

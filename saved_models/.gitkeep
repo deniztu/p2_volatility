@@ -17,6 +17,3 @@ data/human_raw_data/*
 data/human_raw_data/*
 cognitive_models/*
 saved_models/*/*
-
-# exception
-!saved_models/.gitkeep

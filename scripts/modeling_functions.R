@@ -21,86 +21,6 @@ rstan_options(auto_write = TRUE)
 # for Stan models                                                        #
 ##########################################################################
 
-# Input:
-# path_to_test_zip: path to zip file with .csv test files
-# path_to_save_formatted_data: path to save returned RData object 
-#
-# Output: 
-# save .RData object with formatted data for modeling
-
-# load packages
-# library(reticulate)
-# 
-# preprocess_rnn_data_for_modeling <- function(path_to_test_zip
-#                                              , zip_file_name # should contain %s in string as sprintf is used
-#                                              , num_instances # should contain %s in string as sprintf is used
-#                                              , sd_range
-#                                              , path_to_save_formatted_data = 'data/intermediate_data/modeling/preprocessed_data_for_modeling'
-#                                              , path_to_data = 'data/rnn_raw_data'){
-#   
-#   # # set working dir to dir where R-file resides
-#   # setwd(file.path(dirname(rstudioapi::getSourceEditorContext()$path)))
-#   # 
-#   # # move up two directories
-#   # setwd('../..')
-#   
-#   # inside R, source Python script
-#   source_python("helpers.py")
-#   
-#   for (ins in 0:(num_instances-1)){
-#     for (sd_ in sd_range){
-#   
-#       # convert decimal point to '_'
-#       sd_ = dot2_(sd_)
-#       
-#       # insert instance
-#       path_to_test_zip_ = sprintf(path_to_test_zip, ins)
-#       
-#       # insert instance and sd
-#       zip_file_name_ = sprintf(zip_file_name, ins, sd_)
-#       
-#       # instantiate zip2csv class
-#       zip_class = zip2csv(path_to_data, path_to_test_zip_)
-#       
-#       # load .csv test file
-#       zip_class$extract_file(zip_file_name_)
-#       
-#       # read .csv test file
-#       df = read.csv(zip_file_name_)
-#       
-#       ### format data for stan models
-#       
-#       # get choices (add +1, because python indexes with 0)
-#       choices = df$choice+1
-#       
-#       # get rewards
-#       rewards = df[,c('p_rew_1', 'p_rew_2', 'p_rew_3', 'p_rew_4')]
-#       
-#       # get chosen rewards
-#       chosen_rewards = vector()
-#       
-#       for (row in c(1:nrow(rewards))){
-#         chosen_rewards = c(chosen_rewards, rewards[row, choices[row]])
-#       }
-#       
-#       # get model name from zip file name
-#       preprocessed_file_name_ = strsplit(zip_file_name_, '.csv')[[1]][1]
-#       
-#       # save formatted data
-#       res = list(model = preprocessed_file_name_, choices = choices, chosen_rewards = chosen_rewards, rewards = rewards)
-#       # TODO: get name convention for preprocessed data
-#       save(file = sprintf('%s/model_data_%s.RData', path_to_save_formatted_data, preprocessed_file_name_),res)
-#       
-#       # delete .csv test file
-#       zip_class$delete_file(zip_file_name_)
-#       
-#     }
-#   }
-# }
-
-
-
-
 preprocess_rnn_data_for_modeling <- function(reward_type
                                              , rnn_type
                                              , is_noise
@@ -109,7 +29,7 @@ preprocess_rnn_data_for_modeling <- function(reward_type
                                              , sd_range
                                              , path_to_save_formatted_data = 'data/intermediate_data/modeling/preprocessed_data_for_modeling'){
 
-for (id_ in 3:(num_instances-1)){
+for (id_ in 0:(num_instances-1)){
       for (train_sd in train_sds){
           for (sd_ in sd_range){
             
@@ -321,9 +241,7 @@ fit_model_to_rnn_data <- function(stan_models # vector of integers according to 
                                , my_data
                                , cores = 8
                                , chains = 1
-                               , iter = 10)
-                               # , init = my_inits
-                               # , warmup = 1000)
+                               , iter = 4000)
         
         # diagnostics (uncomment if needed)
         print(my_samples)
@@ -336,7 +254,7 @@ fit_model_to_rnn_data <- function(stan_models # vector of integers according to 
         # t = gsub("-", "_", t)
         # t = gsub(":", "_", t)
         # t = gsub(" ", "_", t)
-        result_name <- sprintf('1stan_fit_m_%s_d_%s', stan_model, d)
+        result_name <- sprintf('stan_fit_m_%s_d_%s', stan_model, d)
         
         # get results list
         stanfit = list(stanfit = my_samples, data = full_preprocessed_file_path)

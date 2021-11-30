@@ -1,8 +1,23 @@
-data/
 .spyproject
 __pycache__
 todo.txt
-experiments/
-plots/
-results/
-documentation/
+experiments
+plots
+results
+documentation
+tensorboard
+
+# exclude everything
+data/human_raw_data/*
+data/intermediate_data/modeling/*
+data/intermediate_data/fixed_bandits/*
+data/intermediate_data/pca/*
+data/rnn_raw_data/*
+data/human_raw_data/*
+data/human_raw_data/*
+cognitive_models/*
+save_models/*
+saved_model/*
+
+# exception to the rule
+# !somefolder/.gitkeep 

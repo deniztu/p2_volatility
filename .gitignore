@@ -1,22 +1,25 @@
+# exclude everything
 .spyproject
 __pycache__
 todo.txt
+
 experiments
 plots
 results
 documentation
-tensorboard/*/*
-
-# exclude everything
-data/human_raw_data/*
-data/intermediate_data/modeling/*
-data/intermediate_data/fixed_bandits/*
-data/intermediate_data/pca/*
-data/rnn_raw_data/*
-data/human_raw_data/*
-data/human_raw_data/*
-cognitive_models/*
-saved_models/*/*
+saved_models/*
+tensorboard/*
+data/*
+scripts/*
 
 # exception
 !saved_models/.gitkeep
+!tensorboard/.gitkeep
+!scripts/.gitkeep
+!saved_models/.gitkeep
+!saved_models/.gitkeep
+!data/rnn_raw_data/.gitkeep
+!data/intermediate_data/modeling/.gitkeep
+!data/intermediate_data/fixed_bandits/.gitkeep
+!data/intermediate_data/pca/.gitkeep
+!scripts/.gitkeep

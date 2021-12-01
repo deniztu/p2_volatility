@@ -9,8 +9,11 @@ results
 documentation
 saved_models/*
 tensorboard/*
-data/*
 scripts/*
+data/intermediate_data/modeling/*
+data/intermediate_data/fixed_bandits/*
+data/intermediate_data/pca/*
+data/rnn_raw_data/*
 
 # exception
 !saved_models/.gitkeep

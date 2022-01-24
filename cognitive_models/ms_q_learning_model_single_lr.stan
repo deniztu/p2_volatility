@@ -7,7 +7,7 @@ data {
 
 transformed data {
   vector[4] initV;  // initial values for V for each arm
-  initV = rep_vector(0.5, 4);
+  initV = rep_vector(50.0, 4);
 }
 
 parameters {
@@ -39,37 +39,36 @@ model {
   		
   	  // value updating (learning) 
       v[t+1] = v[t]; 
-      
       v[t+1, choice[s, t]] = v[t, choice[s, t]] + alpha[s] * pe[s, t];
 	}
 }
 }
   
 
-
 generated quantities {
-  vector[nSubjects] log_lik;
+  real log_lik[nSubjects, nTrials];
   int predicted_choices[nSubjects, nTrials];
   vector[4] v[nTrials+1]; // value
   real pe[nSubjects, nTrials];       // prediction error
-  
+
 	for (s in 1:nSubjects){
 	  
-	  	v[1] = initV;
-	
-    	for (t in 1:nTrials){
-    	  
-    	  // choice 
-    		log_lik[s] = categorical_logit_lpmf(choice[s, t] | beta[s] * v[t]);
-    		predicted_choices[s, t] = categorical_logit_rng(beta[s] * v[t]);
-    		 	
-    		// prediction error
-    		pe[s, t] = reward[s, t] - v[t,choice[s, t]];
-    		
-    	  // value updating (learning) 
-        v[t+1] = v[t]; 
-        v[t+1, choice[s, t]] = v[t, choice[s, t]] + alpha[s] * pe[s, t];
-    	}
-	}
+  	v[1] = initV;
+
+  	for (t in 1:nTrials){
+  	  
+  	  // choice 
+  		log_lik[s, t] = categorical_logit_lpmf(choice[s, t] | beta[s] * v[t]);
+  		predicted_choices[s, t] = categorical_logit_rng(beta[s] * v[t]);
+  		 	
+  		// prediction error
+  		pe[s, t] = reward[s, t] - v[t,choice[s, t]];
+  		
+  	  // value updating (learning) 
+      v[t+1] = v[t]; 
+      v[t+1, choice[s, t]] = v[t, choice[s, t]] + alpha[s] * pe[s, t];
+      
+  	}
+  }
 }
 

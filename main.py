@@ -1,7 +1,6 @@
 from classes.bandits import fixed_bandit_class as fbc
 from classes.bandits import bandit_class as bc
 from classes.neural_networks import network_class_LSTM_v2_Deniz_IP2_AC3 as nn
-# from neural_networks import network_class as nn
 from matplotlib import pyplot as plt
 import tensorflow as tf
 import numpy as np
@@ -9,11 +8,11 @@ import pandas as pd
 
 #%% Train the rnn
 
-bandit_types = ['.1']
+bandit_types = ['meta_volatility']
 
 reward_types = ['continuous']
 
-for id_ in range(10):
+for id_ in range(3,10):
     for isnoise in [False]:
         for reward_type in reward_types:
             for bandit_type in bandit_types:

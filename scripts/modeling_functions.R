@@ -140,7 +140,8 @@ fit_model_to_rnn_data <- function(stan_models # vector of integers according to 
   # inside R, source Python script
   # source_python("helpers.py")
   
-  for (ins in 0:(num_instances-1)){
+  # for (ins in 8:(num_instances-1)){
+  for (ins in c(8)){
     
     for (sd_ in sd_range){
      
@@ -168,17 +169,21 @@ fit_model_to_rnn_data <- function(stan_models # vector of integers according to 
         # get model_file and inits according to stan_model
         
         if(stan_model == 1){
-          model_file = paste0(cognitive_model_directory, 'ss_q_learning_model_seperate_lr.stan')
+          model_file = paste0(cognitive_model_directory, 'ms_q_learning_model_seperate_lr.stan')
           
           # make stan model a global variable
           my_stan_model <<- stan_model(model_file)
           
-          my_inits <- function(){
-            list(
-              alpha_pos_rpe = 0.5,
-              alpha_neg_rpe = 0.5,
-              beta  = 1
-            )}
+          n_parameters = 3
+          n_runs = 10 
+          n_parameter_columns = n_parameters * n_runs
+          
+          # my_inits <- function(){
+          #   list(
+          #     alpha_pos_rpe = 0.5,
+          #     alpha_neg_rpe = 0.5,
+          #     beta  = 1
+          #   )}
         }
         
         if(stan_model == 2){
@@ -199,41 +204,53 @@ fit_model_to_rnn_data <- function(stan_models # vector of integers according to 
         }
         
         if(stan_model == 3){
-          model_file = paste0(cognitive_model_directory,'BayesSM_ss_model.stan')
+          model_file = paste0(cognitive_model_directory,'BayesSM_ms_model.stan')
           
           # make stan model a global variable
           my_stan_model <<- stan_model(model_file)
           
-          my_inits <- function(){
-            list(
-              beta  = 1
-            )}
+          n_parameters = 1
+          n_runs = 10 
+          n_parameter_columns = n_parameters * n_runs
+          
+          # my_inits <- function(){
+          #   list(
+          #     beta  = 1
+          #   )}
         }
         
         if(stan_model == 4){
-          model_file = paste0(cognitive_model_directory,'BayesSMEP_ss_model.stan')
+          model_file = paste0(cognitive_model_directory,'BayesSMEP_ms_model.stan')
           
           # make stan model a global variable
           my_stan_model <<- stan_model(model_file)
           
-          my_inits <- function(){
-            list(
-              beta  = 1,
-              phi = 0,
-              rho = 0
-            )}
+          n_parameters = 3
+          n_runs = 10 
+          n_parameter_columns = n_parameters * n_runs
+          
+          # my_inits <- function(){
+          #   list(
+          #     beta  = 1,
+          #     phi = 0,
+          #     rho = 0
+          #   )}
         }
         if(stan_model == 5){
-          model_file = paste0(cognitive_model_directory,'BayesSME_ss_model.stan')
+          model_file = paste0(cognitive_model_directory,'BayesSME_ms_model.stan')
           
           # make stan model a global variable
           my_stan_model <<- stan_model(model_file)
           
-          my_inits <- function(){
-            list(
-              beta  = 1,
-              phi = 0
-            )}
+          n_parameters = 2
+          n_runs = 10 
+          n_parameter_columns = n_parameters * n_runs
+          
+          # my_inits <- function(){
+          #   list(
+          #     beta  = 1,
+          #     phi = 0
+          #   )}
         }
         
         # posterior sampling
@@ -262,7 +279,7 @@ fit_model_to_rnn_data <- function(stan_models # vector of integers according to 
         # save result object (contains stan fit object + full_preprocessed_file_path)
         df <- as.data.frame(stanfit$stanfit)
         # save whole df as .RData
-        save(df, file = sprintf('%s/%s.feather', path_to_save_results, result_name))
+        save(df, file = sprintf('%s/%s.RData', path_to_save_results, result_name))
         # save only parameter columns as .feather (otherwise slow)
         
         df <- df[, 1:n_parameter_columns]

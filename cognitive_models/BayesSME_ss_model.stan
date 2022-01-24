@@ -1,8 +1,9 @@
 data {
-  int<lower=1> nTrials;               
-  int<lower=0,upper=4> choice[nTrials];     
-  real<lower=0, upper=100> reward[nTrials]; 
-  }
+	int nTrials; //number of trials
+	int<lower=1> nSubjects; // number of subjects
+	int choice[nSubjects, nTrials]; // vector of choices
+	real<lower=0, upper=100> reward[nSubjects, nTrials]; // vector of rewards
+}
 
 transformed data {
   real<lower=0, upper=100> v1;
@@ -21,15 +22,15 @@ transformed data {
 }
 
 parameters {
-  real<lower=0,upper=3> beta;
-  real phi;
+  real beta[nSubjects];
+  real phi[nSubjects];
 }
 
 model {
   
   vector[4] v;   // value (mu)
   vector[4] sig; // sigma
-  real pe;       // prediction error
+  real pe[nSubjects, nTrials];       // prediction error
   real Kgain;    // Kalman gain
   vector[4] eb;  // exploration bonus
   

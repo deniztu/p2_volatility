@@ -15,24 +15,30 @@ setwd('../')
 # Preprocess binary test files #
 ################################
 
-preprocess_rnn_data_for_modeling(rnn_type = 'rnn'
-                                 , is_noise = FALSE
-                                 , num_instances = 3
-                                 , train_sds = c('meta_volatility')
-                                 , sd_range = seq(0.02, 0.32, 0.02)
-                                 , path_to_save_formatted_data = 'data/intermediate_data/modeling/preprocessed_data_for_modeling'
-                                 , reward_type = 'continuous')
+# preprocess_rnn_data_for_modeling(rnn_type = 'rnn'
+#                                  , is_noise = FALSE
+#                                  , num_instances = 3
+#                                  , train_sds = c('meta_volatility')
+#                                  , sd_range = seq(0.02, 0.32, 0.02)
+#                                  , path_to_save_formatted_data = 'data/intermediate_data/modeling/preprocessed_data_for_modeling'
+#                                  , reward_type = 'continuous')
 
 
 ################################
 # Model Preprocessed Data      #
 ################################
 
-fit_model_to_rnn_data(stan_models = c(2), preprocessed_file_name = 'pp_data_rnn_n_f_rt_continuous_train_sd_meta_volatility_id_%s_test_sd_%s.RData',
-                      num_instances = 10, 
+fit_model_to_rnn_data(stan_models = c(1,2,3,4,5), preprocessed_file_name = 'pp_data_rnn_n_f_rt_continuous_train_sd_meta_volatility_id_%s_test_sd_%s.RData',
+                      num_instances = 10,
                       sd_range = seq(0.02, 0.32, 0.02))
 
+fit_model_to_rnn_data(stan_models = c(2), preprocessed_file_name = 'pp_data_rnn_n_f_rt_continuous_train_sd_.1_id_%s_test_sd_%s.RData',
+                      num_instances = 10, 
+                      sd_range = seq(0.1, 0.1, 0.02))
 
+fit_model_to_rnn_data(stan_models = c(2), preprocessed_file_name = 'pp_data_rnn_n_f_rt_continuous_train_sd_.05_id_%s_test_sd_%s.RData',
+                      num_instances = 10, 
+                      sd_range = seq(0.02, 0.32, 0.02))
 
 
 

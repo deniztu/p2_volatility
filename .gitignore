@@ -20,7 +20,7 @@ data/rnn_raw_data/*
 !tensorboard/.gitkeep
 !scripts/.gitkeep
 !saved_models/.gitkeep
-!saved_models/.gitkeep
+!save_models/.gitkeep
 !data/rnn_raw_data/.gitkeep
 !data/intermediate_data/modeling/.gitkeep
 !data/intermediate_data/fixed_bandits/.gitkeep

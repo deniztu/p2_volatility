@@ -59,7 +59,12 @@ class bandit:
             
         if self.bandit_type == 'daw_et_al_2006':
             self.bandit_parameter = noise_sd
-        
+            
+        if self.bandit_type == 'fixed_ratio':
+            self.bandit_parameter = reward_rate
+            
+        if self.bandit_type == 'variable_ratio':
+            self.bandit_parameter = reward_rate
 
             
     def generate_task(self):
@@ -287,7 +292,56 @@ class bandit:
             centered_pay_off_arr = pay_off_arr - np.mean(pay_off_arr)
                 
             return(centered_pay_off_arr, pay_off_arr)
-    
+        
+        if self.bandit_type == 'fixed_ratio':
+            
+            #pdb.set_trace()
+            
+            # randomly assign rewarded bandit
+            # rand_int     = np.random.randint(self.arms)
+            
+            # initialise obtained reward prob array
+            r_probs = np.zeros([self.num_steps, self.arms])
+            
+            # rewarded bandit is rewarded with fixed ratio, punished otherwise
+            # unrewarded bandit has reward = 0 
+            r_probs[:]   = 0
+            r_probs[:, 1]   = - 0.2
+            
+            r_probs[::int(np.reciprocal(self.bandit_parameter)), 1] = 1
+            
+            # extinction phase
+            r_probs[int(self.num_steps/2):, 1] = - 0.2
+            
+            rewards = r_probs
+                
+            return rewards, r_probs
+        
+        if self.bandit_type == 'variable_ratio':
+            
+            # randomly assign bandit for rewarded bandit
+            # rand_int     = np.random.randint(self.arms)
+            
+            # initialise obtained reward prob array
+            r_probs = np.zeros([self.num_steps, self.arms])
+            
+            # rewarded bandit is rewarded with fixed ratio, punished otherwise
+            # unrewarded bandit has reward = 0 
+            r_probs[:]   = 0
+            r_probs[:, 1]   = - 0.2
+            
+            # select reward with variable ratio
+            sample = r_probs[:int(self.num_steps/2), 1]
+            sample[::int(np.reciprocal(self.bandit_parameter))] = 1
+            r_probs[:int(self.num_steps/2), 1] = random.sample(list(sample),int(self.num_steps/2))
+            
+            # extinction phase all bandits not rewarded
+            # r_probs[int(self.num_steps/2):] = 0
+            
+            rewards = r_probs
+                
+            return rewards, r_probs
+        
         else: 
             print('This functionality is not implemented yet')
         

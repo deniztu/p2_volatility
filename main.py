@@ -8,11 +8,16 @@ import pandas as pd
 
 #%% Train the rnn
 
+# bandit_types = ['meta_volatility']
+
+# reward_types = ['binary']
+
 bandit_types = ['meta_volatility']
 
 reward_types = ['continuous']
 
-for id_ in range(3,10):
+
+for id_ in range(0,10):
     for isnoise in [False]:
         for reward_type in reward_types:
             for bandit_type in bandit_types:
@@ -33,8 +38,8 @@ for id_ in range(3,10):
                     
                 
                 train_mab = bc.bandit(bandit_type = this_bandit_type
-                                    , arms = 4 
-                                    , num_steps = 300
+                                    , arms = 4
+                                    , num_steps = 200
                                     , reward_type = reward_type
                                     , noise_sd = sd)
                         
@@ -47,7 +52,7 @@ for id_ in range(3,10):
                                     , model_id= id_
                                     , train_sd = bandit_type)
                 # train the rnn
-                nnet.train()
+                # nnet.train()
                 
                 # reset the rnn
                 nnet.reset()
@@ -55,24 +60,43 @@ for id_ in range(3,10):
                 # sd_range = np.arange(0.02, 0.34, 0.02)        
                 
                 # for sd_ in sd_range:
+                    
+                test_mab = bc.bandit(bandit_type = 'variable_ratio'
+                                    , arms = 2 
+                                    , num_steps = 400
+                                    , reward_rate = 1/4)
                 
-                #     fbc.create_bandit(bandit_type = 'restless'
-                #                         , arms = 4 
-                #                         , num_steps = 300
-                #                         , reward_type='continuous'
-                #                         , num_runs = 10
-                #                         , num_rins = 1
-                #                         , noise_sd = sd_)
+                nnet.test(n_replications = 1,
+                num_rins = 1,
+                bandit = test_mab,
+                bandit_param_range = [0.35],
+                use_fixed_bandits = False,
+                reward_type = 'binary')
+                
+                
+                
+                # test_mab = bc.bandit(bandit_type = 'variable_ratio'
+                #                     , arms = 2 
+                #                     , num_steps = 400
+                #                     , reward_rate = 1/4)
+                
+                    # fbc.create_bandit(bandit_type = 'restless'
+                    #                     , arms = 4 
+                    #                     , num_steps = 300
+                    #                     , reward_type='continuous'
+                    #                     , num_runs = 10
+                    #                     , num_rins = 1
+                    #                     , noise_sd = sd_)
                 
                 # test_mab = 'fixed_res_rt_con_p_{}_a_4_n_300_run_{}.zip'
                 
-                # # test the rnn
-                # nnet.test(n_replications = 10,
+                # test the rnn
+                # nnet.test(n_replications = 1,
                 #           num_rins = 1,
                 #           bandit = test_mab,
-                #           bandit_param_range = np.arange(0.02, 0.34, 0.02),
-                #           use_fixed_bandits = True,
-                #           reward_type = 'continuous')
+                #           bandit_param_range = np.arange(0.05, 0.55, 0.05),
+                #           use_fixed_bandits = False,
+                #           reward_type = 'binary')
                 
                 # nnet.test(n_replications = 10,
                 # num_rins = 1,
@@ -107,7 +131,24 @@ for id_ in range(3,10):
         
         
     
+# test = bc.bandit(bandit_type = 'fixed_ratio'
+#                                     , arms = 2 
+#                                     , num_steps = 400
+#                                     , reward_rate = 1/20)
     
+# rewards, _ = test.generate_task()  
+
+# plt.plot(rewards)  
+
+# np.sum(rewards)
+
+# test = bc.bandit(bandit_type = 'variable_ratio'
+#                                     , arms = 2 
+#                                     , num_steps = 400
+#                                     , reward_rate = 1/4)
     
-    
-    
+# rewards, _ = test.generate_task()  
+
+# np.sum(rewards)
+
+# plt.plot(rewards) 

@@ -12,13 +12,13 @@ from helpers import dot2_
 
 feather_cl = feather_class()
 
-TRAIN_SD = ['meta_volatility', '.05','.1']
+TRAIN_SD = ['meta_volatility']
 IDS = 10
 RUNS = 10
 RINS = 0
 TEST_SDS = np.arange(.02, .34, .02)
 REWARD_TYPE = 'continuous'
-RNN_TYPE = 'rnn'
+RNN_TYPE = 'lstm_ac_continuous'
 IS_NOISE = False
 
 for train_sd in TRAIN_SD:

@@ -17,7 +17,7 @@ bandit_types = ['meta_volatility']
 reward_types = ['continuous']
 
 
-for id_ in range(0,10):
+for id_ in range(0,2):
     for isnoise in [False]:
         for reward_type in reward_types:
             for bandit_type in bandit_types:
@@ -61,17 +61,17 @@ for id_ in range(0,10):
                 
                 # for sd_ in sd_range:
                     
-                test_mab = bc.bandit(bandit_type = 'variable_ratio'
-                                    , arms = 2 
-                                    , num_steps = 400
-                                    , reward_rate = 1/4)
+                # test_mab = bc.bandit(bandit_type = 'variable_ratio'
+                #                     , arms = 2 
+                #                     , num_steps = 400
+                #                     , reward_rate = 1/4)
                 
-                nnet.test(n_replications = 1,
-                num_rins = 1,
-                bandit = test_mab,
-                bandit_param_range = [0.35],
-                use_fixed_bandits = False,
-                reward_type = 'binary')
+                # nnet.test(n_replications = 1,
+                # num_rins = 1,
+                # bandit = test_mab,
+                # bandit_param_range = [0.35],
+                # use_fixed_bandits = False,
+                # reward_type = 'binary')
                 
                 
                 

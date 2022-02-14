@@ -42,7 +42,7 @@ fit_model_to_rnn_data(stan_models = c(2), preprocessed_file_name = 'pp_data_rnn_
 
 fit_model_to_rnn_data(stan_models = c(2), preprocessed_file_name = 'pp_data_lstm_ac_continuous_n_f_rt_continuous_train_sd_meta_volatility_id_%s_test_sd_%s.RData',
                       num_instances = 10, 
-                      sd_range = seq(0.02, 0.32, 0.02))
+                      sd_range = c(0.32))
 
 
 

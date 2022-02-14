@@ -140,9 +140,8 @@ fit_model_to_rnn_data <- function(stan_models # vector of integers according to 
   # inside R, source Python script
   # source_python("helpers.py")
   
-  # for (ins in 8:(num_instances-1)){
-  for (ins in c(8)){
-    
+# for (ins in c(3,4,5,6,7,9)){
+for (ins in c(1)){
     for (sd_ in sd_range){
      
       # convert decimal point to '_'

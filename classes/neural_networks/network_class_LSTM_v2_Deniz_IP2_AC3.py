@@ -504,225 +504,225 @@ class neural_network:
         # reset the graph
         self.reset()
     
-    def test(self, n_replications, bandit_param_range, bandit, use_fixed_bandits, num_rins
-         , reward_type, path_to_fixed_bandits = 'data/intermediate_data/fixed_bandits/'):
+    # def test(self, n_replications, bandit_param_range, bandit, use_fixed_bandits, num_rins
+    #      , reward_type, path_to_fixed_bandits = 'data/intermediate_data/fixed_bandits/'):
     
-        # do not train the RNN
-        train = False
-        
-        # create folder for test files
-        # if not os.path.exists('test_files'):
-        #     os.makedirs('test_files')
-        
-        # code to use if fixed bandits are used
-        if use_fixed_bandits:
-            
-            for sd_ in bandit_param_range:
-                
-                # create df list
-                df_list = []
-                
-                temp_sd = dot2_(sd_)
-                
-                for run in range(n_replications): 
-                    
-                    # declare zip name
-                    bandit_zip_name = bandit.format(temp_sd, str(run))
-                    zip_name = self.model_name + '_' + bandit_zip_name
-                                                
-                    for rin in range(num_rins):
-                    
-                        # extract bandit
-                        
-                        bandit_zip = zip2csv(path_to_data = path_to_fixed_bandits, zip_file_name = bandit_zip_name)
-                        
-                        bandit_file_name = bandit_zip_name.replace('.zip', '_rin_{}.csv'.format(str(rin)))
-                        
-                        bandit_zip.extract_file(bandit_file_name)
-                        
-                        fixed_test_bandit = pd.read_csv(bandit_file_name)
-                        
-                        # convert datafame into bandit class
-                        self.bandit = fbc.load_bandit(fixed_test_bandit)
-                        
-                        # assign sd
-                        self.bandit.bandit_parameter = sd_
-    
-                        # delete presaved bandit
-                        bandit_zip.delete_file(bandit_file_name)
-                        
-                        # test rnn
-                        # create the graph
-                        self.worker  = Worker(conditioning_bandit(self.bandit)
-                          , self.trainer, self.model_path, self.parameter
-                          , self.model_name, self.noise
-                          , self.path_to_save_progress
-                          , self.n_hidden_neurons
-                          , self.bandit.arms
-                          , self.bandit.num_steps
-                          , self.n_iterations)
-                
-                        # create saver
-                        self.saver   = tf.train.Saver(max_to_keep=5)
-                    
-                        with tf.Session() as sess:
-                            # print('Testing Model: {}'.format(self.model_name))
-                            ckpt = tf.train.get_checkpoint_state(self.model_path)
-                            
-                            self.saver.restore(sess,ckpt.model_checkpoint_path)
-                            
-                            # get test dataframe                       
-                            df = self.worker.work(self.gamma,sess,self.saver,train)
-    
-                            file_name = zip_name.replace('.zip', '') +'_rin_{}.csv'.format(str(rin)).lower()
-                            
-                            '''
-                            create multiindex df and save as pickle
-                            '''
-                            
-                            # add columns later used as index
-                            df['rnn_type'] = self.train_sd
-                            df['run'] = run
-                            df['reward_instance'] = rin
-                            df['rnn_test_sd'] = self.bandit.bandit_parameter
-                            df['rnn_id'] = self.model_id
-                            
-                            accuracy = [int(ch==np.argmax([p1,p2,p3,p4])) for ch, p1, p2, p3, p4 in zip(df['choice'], df['p_rew_1'], df['p_rew_2'], df['p_rew_3'], df['p_rew_4'])]
-                            df['accuracy'] = accuracy
-                            
-                            # add df to df_list
-                            
-                            df_list.append(df)
-                        
-                        
-                    
-                        # reset graph
-                        self.reset()
-            
-                # create list with names of the index of the multiindex df
-                multiindex_list = ['rnn_type', 'rnn_id', 'rnn_test_sd', 'run', 'reward_instance']
-                
-                # concat df_list rowwise
-                all_dfs = pd.concat(df_list)
-                
-                # make all_dfs a muliindex df
-                mult_ind_df = all_dfs.set_index(multiindex_list)
-                
-                # pickle the file
-                filename = self.path_to_save_test_files + 'all_lstm_ac_{}_test_runs_train_sd_{}_id_{}_test_sd_{}'.format(reward_type, self.train_sd, self.model_id, temp_sd)
-                outfile = open(filename,'wb')
-                pickle.dump(mult_ind_df, outfile)
-                outfile.close()
-                
-                print('FINISHED')
-        
-    # def test(self, n_replications, bandit_param_range, bandit):
-        
-    #     if bandit_param_range == None:
-    #         bandit_param_range = [bandit.bandit_parameter]
-        
     #     # do not train the RNN
     #     train = False
         
     #     # create folder for test files
-    #     if not os.path.exists('test_files'):
-    #         os.makedirs('test_files')
+    #     # if not os.path.exists('test_files'):
+    #     #     os.makedirs('test_files')
+        
+    #     # code to use if fixed bandits are used
+    #     if use_fixed_bandits:
             
-    #     # create zip name to save test runs
-    #     zip_name = '{}.zip'.format(self.model_name)
-        
-    #     # give zip file another name if we test presaved bandits (bandit = zip_file_name)
-    #     if isinstance(bandit, str) and 'Daw2006' in bandit:
-    #         # create zip name to save test runs
-    #         zip_name = '{}.zip'.format(self.model_name+'_i_'+ bandit.split('.')[0][-1])
-        
-    #     else:
-    #         if isinstance(bandit, str):
-    #             zip_name = 'random_walks_{}.zip'.format(self.model_name)
-    #             # access zip file with saved bandit
-    #             bandit_zip = zip2csv(bandit)
-            
-    #     # open zip file to save test runs
-    #     with zipfile.ZipFile('test_files/{}'.format(zip_name), 'w', compression = zipfile.ZIP_DEFLATED) as my_zip:
-        
-    #         for par in bandit_param_range:
+    #         for sd_ in bandit_param_range:
                 
-    #             if not isinstance(bandit, str):
-    #                 # Use specified bandit with certain parameter
-    #                 bandit.bandit_parameter = par                    
-    #                 # assign bandit to RNN instance
-    #                 self.bandit = bandit
+    #             # create df list
+    #             df_list = []
                 
-    #             for run in range(n_replications):
+    #             temp_sd = dot2_(sd_)
+                
+    #             for run in range(n_replications): 
                     
-    #                 if isinstance(bandit, str) and 'Daw2006' in bandit:
-    #                     df = pd.read_csv(bandit)
+    #                 # declare zip name
+    #                 bandit_zip_name = bandit.format(temp_sd, str(run))
+    #                 zip_name = self.model_name + '_' + bandit_zip_name
+                                                
+    #                 for rin in range(num_rins):
+                    
+    #                     # extract bandit
+                        
+    #                     bandit_zip = zip2csv(path_to_data = path_to_fixed_bandits, zip_file_name = bandit_zip_name)
+                        
+    #                     bandit_file_name = bandit_zip_name.replace('.zip', '_rin_{}.csv'.format(str(rin)))
+                        
+    #                     bandit_zip.extract_file(bandit_file_name)
+                        
+    #                     fixed_test_bandit = pd.read_csv(bandit_file_name)
                         
     #                     # convert datafame into bandit class
-    #                     self.bandit = fdbc.load_daw_bandit(df)                            
-                    
-    #                 else:
-    #                     if isinstance(bandit, str):
-    #                         # load presaved bandit
-    #                         file_name = bandit[:-4]+'_p_{}_run_{}.csv'.format(dot2_(par), 
-    #                                                                      run)
-    #                         # extract presaved bandit
-    #                         bandit_zip.extract_file(file_name)
-                            
-    #                         # load .csv to dataframe
-    #                         df = pd.read_csv(file_name)
-                                    
-    #                         # convert datafame into bandit class
-    #                         self.bandit = fbc.load_bandit(df)
-                            
-    #                         # assign sd
-    #                         self.bandit.bandit_parameter = par
+    #                     self.bandit = fbc.load_bandit(fixed_test_bandit)
+                        
+    #                     # assign sd
+    #                     self.bandit.bandit_parameter = sd_
     
-    #                         # delete presaved bandit
-    #                         bandit_zip.delete_file(file_name)
-                            
-    #                         # # assign bandit to RNN instance
-    #                         # self.bandit = bandit
-                    
-    #                 # create the graph
-    #                 self.worker  = Worker(conditioning_bandit(self.bandit)
-    #                   , self.trainer, self.model_path, self.parameter
-    #                   , self.model_name, self.noise
-    #                   , self.path_to_save_progress
-    #                   , self.n_hidden_neurons
-    #                   , self.bandit.arms
-    #                   , self.bandit.num_steps
-    #                   , self.n_iterations)
-                    
-    #                 # create saver
-    #                 self.saver   = tf.train.Saver(max_to_keep=5)
+    #                     # delete presaved bandit
+    #                     bandit_zip.delete_file(bandit_file_name)
+                        
+    #                     # test rnn
+    #                     # create the graph
+    #                     self.worker  = Worker(conditioning_bandit(self.bandit)
+    #                       , self.trainer, self.model_path, self.parameter
+    #                       , self.model_name, self.noise
+    #                       , self.path_to_save_progress
+    #                       , self.n_hidden_neurons
+    #                       , self.bandit.arms
+    #                       , self.bandit.num_steps
+    #                       , self.n_iterations)
                 
-    #                 with tf.Session() as sess:
-    #                     print('Testing Model: {}'.format(self.model_name))
-    #                     ckpt = tf.train.get_checkpoint_state(self.model_path)
-                        
-    #                     self.saver.restore(sess,ckpt.model_checkpoint_path)
-                        
-    #                     # get test dataframe                       
-    #                     df = self.worker.work(self.gamma,sess,self.saver,train)
-    #                     # file_name = self.model_name+'_{}_p_{}_n_{}_run_{}.csv'.format(self.bandit.bandit_type[0:3]
-    #                     #                                                               , dot2_(self.bandit.bandit_parameter)
-    #                     #                                                               , self.bandit.num_steps
-    #                     #                                                           , str(run)).lower()
-                        
-    #                     file_name = zip_name.replace('.zip', '') +'_{}_p_{}_n_{}_run_{}.csv'.format(self.bandit.bandit_type[0:3]
-    #                                                           , dot2_(self.bandit.bandit_parameter)
-    #                                                           , self.bandit.num_steps
-    #                                                       , str(run)).lower()
-    #                     # create csv from dataframe
-    #                     df.to_csv(file_name)
-    #                     # write csv to zip file
-    #                     my_zip.write(file_name)
-    #                     # delete csv file
-    #                     os.remove(file_name) 
+    #                     # create saver
+    #                     self.saver   = tf.train.Saver(max_to_keep=5)
                     
-    #                 # reset graph
-    #                 self.reset()
+    #                     with tf.Session() as sess:
+    #                         # print('Testing Model: {}'.format(self.model_name))
+    #                         ckpt = tf.train.get_checkpoint_state(self.model_path)
+                            
+    #                         self.saver.restore(sess,ckpt.model_checkpoint_path)
+                            
+    #                         # get test dataframe                       
+    #                         df = self.worker.work(self.gamma,sess,self.saver,train)
+    
+    #                         file_name = zip_name.replace('.zip', '') +'_rin_{}.csv'.format(str(rin)).lower()
+                            
+    #                         '''
+    #                         create multiindex df and save as pickle
+    #                         '''
+                            
+    #                         # add columns later used as index
+    #                         df['rnn_type'] = self.train_sd
+    #                         df['run'] = run
+    #                         df['reward_instance'] = rin
+    #                         df['rnn_test_sd'] = self.bandit.bandit_parameter
+    #                         df['rnn_id'] = self.model_id
+                            
+    #                         accuracy = [int(ch==np.argmax([p1,p2,p3,p4])) for ch, p1, p2, p3, p4 in zip(df['choice'], df['p_rew_1'], df['p_rew_2'], df['p_rew_3'], df['p_rew_4'])]
+    #                         df['accuracy'] = accuracy
+                            
+    #                         # add df to df_list
+                            
+    #                         df_list.append(df)
+                        
+                        
+                    
+    #                     # reset graph
+    #                     self.reset()
+            
+    #             # create list with names of the index of the multiindex df
+    #             multiindex_list = ['rnn_type', 'rnn_id', 'rnn_test_sd', 'run', 'reward_instance']
+                
+    #             # concat df_list rowwise
+    #             all_dfs = pd.concat(df_list)
+                
+    #             # make all_dfs a muliindex df
+    #             mult_ind_df = all_dfs.set_index(multiindex_list)
+                
+    #             # pickle the file
+    #             filename = self.path_to_save_test_files + 'all_lstm_ac_{}_test_runs_train_sd_{}_id_{}_test_sd_{}'.format(reward_type, self.train_sd, self.model_id, temp_sd)
+    #             outfile = open(filename,'wb')
+    #             pickle.dump(mult_ind_df, outfile)
+    #             outfile.close()
+                
+    #             print('FINISHED')
+        
+    def test(self, n_replications, bandit_param_range, bandit):
+        
+        if bandit_param_range == None:
+            bandit_param_range = [bandit.bandit_parameter]
+        
+        # do not train the RNN
+        train = False
+        
+        # create folder for test files
+        if not os.path.exists('test_files'):
+            os.makedirs('test_files')
+            
+        # create zip name to save test runs
+        zip_name = '{}.zip'.format(self.model_name)
+        
+        # give zip file another name if we test presaved bandits (bandit = zip_file_name)
+        if isinstance(bandit, str) and 'Daw2006' in bandit:
+            # create zip name to save test runs
+            zip_name = '{}.zip'.format(self.model_name+'_i_'+ bandit.split('.')[0][-1])
+        
+        else:
+            if isinstance(bandit, str):
+                zip_name = 'random_walks_{}.zip'.format(self.model_name)
+                # access zip file with saved bandit
+                bandit_zip = zip2csv(bandit)
+            
+        # open zip file to save test runs
+        with zipfile.ZipFile('test_files/{}'.format(zip_name), 'w', compression = zipfile.ZIP_DEFLATED) as my_zip:
+        
+            for par in bandit_param_range:
+                
+                if not isinstance(bandit, str):
+                    # Use specified bandit with certain parameter
+                    bandit.bandit_parameter = par                    
+                    # assign bandit to RNN instance
+                    self.bandit = bandit
+                
+                for run in range(n_replications):
+                    
+                    if isinstance(bandit, str) and 'Daw2006' in bandit:
+                        df = pd.read_csv(bandit)
+                        
+                        # convert datafame into bandit class
+                        self.bandit = fdbc.load_daw_bandit(df)                            
+                    
+                    else:
+                        if isinstance(bandit, str):
+                            # load presaved bandit
+                            file_name = bandit[:-4]+'_p_{}_run_{}.csv'.format(dot2_(par), 
+                                                                          run)
+                            # extract presaved bandit
+                            bandit_zip.extract_file(file_name)
+                            
+                            # load .csv to dataframe
+                            df = pd.read_csv(file_name)
+                                    
+                            # convert datafame into bandit class
+                            self.bandit = fbc.load_bandit(df)
+                            
+                            # assign sd
+                            self.bandit.bandit_parameter = par
+    
+                            # delete presaved bandit
+                            bandit_zip.delete_file(file_name)
+                            
+                            # # assign bandit to RNN instance
+                            # self.bandit = bandit
+                    
+                    # create the graph
+                    self.worker  = Worker(conditioning_bandit(self.bandit)
+                      , self.trainer, self.model_path, self.parameter
+                      , self.model_name, self.noise
+                      , self.path_to_save_progress
+                      , self.n_hidden_neurons
+                      , self.bandit.arms
+                      , self.bandit.num_steps
+                      , self.n_iterations)
+                    
+                    # create saver
+                    self.saver   = tf.train.Saver(max_to_keep=5)
+                
+                    with tf.Session() as sess:
+                        print('Testing Model: {}'.format(self.model_name))
+                        ckpt = tf.train.get_checkpoint_state(self.model_path)
+                        
+                        self.saver.restore(sess,ckpt.model_checkpoint_path)
+                        
+                        # get test dataframe                       
+                        df = self.worker.work(self.gamma,sess,self.saver,train)
+                        # file_name = self.model_name+'_{}_p_{}_n_{}_run_{}.csv'.format(self.bandit.bandit_type[0:3]
+                        #                                                               , dot2_(self.bandit.bandit_parameter)
+                        #                                                               , self.bandit.num_steps
+                        #                                                           , str(run)).lower()
+                        
+                        file_name = zip_name.replace('.zip', '') +'_{}_p_{}_n_{}_run_{}.csv'.format(self.bandit.bandit_type[0:3]
+                                                              , dot2_(self.bandit.bandit_parameter)
+                                                              , self.bandit.num_steps
+                                                          , str(run)).lower()
+                        # create csv from dataframe
+                        df.to_csv(file_name)
+                        # write csv to zip file
+                        my_zip.write(file_name)
+                        # delete csv file
+                        os.remove(file_name) 
+                    
+                    # reset graph
+                    self.reset()
 
     def reset(self):
         tf.reset_default_graph()

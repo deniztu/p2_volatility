@@ -5,7 +5,7 @@ data {
 }
 
 parameters {
-  real y0;
+  real<lower=0> y0;
   real<lower=0> y_max;
   real k;
   real<lower=0> tau;
@@ -23,9 +23,9 @@ transformed parameters {
 
 
 model {
-  y0 ~ normal(0,100);
-  y_max ~ normal(0,100)T[0,];
-  k ~ normal(0,100);
+  y0 ~ normal(0,10)T[0,];
+  y_max ~ normal(0,10)T[0,];
+  k ~ normal(0,10);
   tau ~ gamma(.0001, .0001);
   
   y ~ normal(m, sigma);

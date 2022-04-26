@@ -36,6 +36,9 @@ class pca_handler():
         # create list of dfs for multindexing
         df_list = []
         
+        # create list of pca objects for each run
+        pca_object_per_run = []
+        
         # apply pca for each run
         for run in range(num_runs):
              
@@ -63,6 +66,9 @@ class pca_handler():
         
             # append to df_list for hierarchical df later
             df_list.append(pc_df)
+            
+            # append to pca object of run to list
+            pca_object_per_run.append(pca)
         
         # create list with names of the index of the multiindex df
         multiindex_list = ['rnn_type', 'rnn_id', 'rnn_test_sd', 'run', 'reward_instance']
@@ -77,7 +83,7 @@ class pca_handler():
         
         pca_file_name = 'pca_{}.pickle'.format(file_name)
         
-        my_pca_dict = {'pca_mult_ind_df': mult_ind_df, 'file_name': file_name}
+        my_pca_dict = {'pca_mult_ind_df': mult_ind_df, 'file_name': file_name, 'pca_object_per_run': pca_object_per_run}
         
         file_to_store = open(self.path_to_save_pca + pca_file_name, "wb")
         

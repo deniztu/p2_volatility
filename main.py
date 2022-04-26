@@ -8,16 +8,17 @@ import pandas as pd
 
 #%% Train the rnn
 
-# bandit_types = ['meta_volatility']
+bandit_types = ['.1']
 
-# reward_types = ['binary']
 
-bandit_types = ['meta_volatility']
+# this_bandit_type = 'stationary'
 
 reward_types = ['continuous']
 
+# reward_type = 'binary'
 
-for id_ in range(0,2):
+
+for id_ in range(1):
     for isnoise in [False]:
         for reward_type in reward_types:
             for bandit_type in bandit_types:
@@ -39,15 +40,16 @@ for id_ in range(0,2):
                 
                 train_mab = bc.bandit(bandit_type = this_bandit_type
                                     , arms = 4
-                                    , num_steps = 200
+                                    , num_steps = 300
                                     , reward_type = reward_type
                                     , noise_sd = sd)
+
                         
                 # intitialise rnn class
                 nnet = nn.neural_network(bandit = train_mab
                                     , noise = False
                                     , entropy_scaling=0
-                                    , weber_fraction=0.5
+                                    , weber_fraction=0
                                     , n_iterations = 50000
                                     , model_id= id_
                                     , train_sd = bandit_type)
@@ -60,20 +62,20 @@ for id_ in range(0,2):
                 # sd_range = np.arange(0.02, 0.34, 0.02)        
                 
                 # for sd_ in sd_range:
-                    
-                # test_mab = bc.bandit(bandit_type = 'variable_ratio'
+                
+                #### USE THE FOLLOWING FOR FR/VR    
+                
+                # test_mab = bc.bandit(bandit_type = 'fixed_ratio'
                 #                     , arms = 2 
-                #                     , num_steps = 400
+                #                     , num_steps = 1000
                 #                     , reward_rate = 1/4)
                 
-                # nnet.test(n_replications = 1,
-                # num_rins = 1,
+                # nnet.test(n_replications = 20,
+                # # num_rins = 1,
                 # bandit = test_mab,
-                # bandit_param_range = [0.35],
-                # use_fixed_bandits = False,
-                # reward_type = 'binary')
+                # bandit_param_range = [0.25])
                 
-                
+                #### UNTIL HERE
                 
                 # test_mab = bc.bandit(bandit_type = 'variable_ratio'
                 #                     , arms = 2 
@@ -88,7 +90,7 @@ for id_ in range(0,2):
                     #                     , num_rins = 1
                     #                     , noise_sd = sd_)
                 
-                # test_mab = 'fixed_res_rt_con_p_{}_a_4_n_300_run_{}.zip'
+                test_mab = 'fixed_res_rt_con_p_{}_a_4_n_300_run_{}.zip'
                 
                 # test the rnn
                 # nnet.test(n_replications = 1,
@@ -98,12 +100,12 @@ for id_ in range(0,2):
                 #           use_fixed_bandits = False,
                 #           reward_type = 'binary')
                 
-                # nnet.test(n_replications = 10,
-                # num_rins = 1,
-                # bandit = test_mab,
-                # bandit_param_range = np.arange(0.02, 0.34, 0.02),
-                # use_fixed_bandits = True,
-                # reward_type = 'continuous')
+                nnet.test(n_replications = 10,
+                num_rins = 1,
+                bandit = test_mab,
+                bandit_param_range = np.arange(0.02, 0.34, 0.02),
+                use_fixed_bandits = True,
+                reward_type = 'continuous')
                 
 
                 

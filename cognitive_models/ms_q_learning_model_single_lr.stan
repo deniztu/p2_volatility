@@ -16,7 +16,7 @@ parameters {
   real<lower=0,upper=1> alpha[nSubjects];
 
 	// inverse temperature 
-	real beta[nSubjects];
+	real <lower=0> beta[nSubjects];
 }
 
 

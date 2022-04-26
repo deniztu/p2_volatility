@@ -23,13 +23,14 @@ rstan_options(auto_write = TRUE)
 
 preprocess_rnn_data_for_modeling <- function(reward_type
                                              , rnn_type
+                                             , file_string # added
                                              , is_noise
                                              , num_instances
                                              , train_sds
                                              , sd_range
                                              , path_to_save_formatted_data = 'data/intermediate_data/modeling/preprocessed_data_for_modeling'){
-
-for (id_ in 0:(num_instances-1)){
+for (id_ in 9){
+# for (id_ in 5:(num_instances-1)){
       for (train_sd in train_sds){
           for (sd_ in sd_range){
             
@@ -39,8 +40,12 @@ for (id_ in 0:(num_instances-1)){
             
             # load feathered python file in R
             is_noise = tolower(substring(is_noise, 1, 1))
+            # is_noise = 'n' #added
             
-            file_name = sprintf('%s_n_%s_rt_%s_train_sd_%s_id_%s_test_sd_%s',rnn_type, is_noise, reward_type, train_sd, id_, test_sd)
+            file_name = sprintf(file_string, rnn_type, is_noise, reward_type, train_sd, id_, test_sd)
+            
+            # file_name = 'lstm_a2c_n_f_rt_continuous_train_sd_0_1_id_0_test_sd_0_1'
+            
             df = arrow::read_feather(paste0(path_to_save_formatted_data,'/',file_name))
             
             ### format data for stan models
@@ -93,7 +98,7 @@ for (id_ in 0:(num_instances-1)){
             
             
             # get file name
-            preprocessed_file_name_ = sprintf('%s_n_%s_rt_%s_train_sd_%s_id_%s_test_sd_%s', rnn_type, is_noise, reward_type, train_sd, id_, test_sd)
+            preprocessed_file_name_ = sprintf(file_string, rnn_type, is_noise, reward_type, train_sd, id_, test_sd)
             
             # save formatted data
             res = list(model = preprocessed_file_name_, choices = choices, chosen_rewards = chosen_rewards, rewards = rewards
@@ -106,6 +111,91 @@ for (id_ in 0:(num_instances-1)){
       }
 }
 
+
+##########################################################################
+# Function calculates the bandit heuristic predictor                     #
+# returns a matrix with number of unique Bandits sampled between switches#
+##########################################################################
+
+get_bandit_heuristic_predictor = function(choices_of_run){
+  
+  # calculate matrix 
+  result_matrix = matrix(0, length(choices_of_run), 4)
+  
+  a1 = which(choices_of_run == 1)
+  a2 = which(choices_of_run == 2)
+  a3 = which(choices_of_run == 3)
+  a4 = which(choices_of_run == 4)
+  
+  b1 = rep(0, length(choices_of_run))
+  b2 = rep(0, length(choices_of_run))
+  b3 = rep(0, length(choices_of_run))
+  b4 = rep(0, length(choices_of_run))
+  
+  
+  # 1 to first occurence
+  
+  b1[1:(a1[1])] = (cumsum(as.numeric(!duplicated(choices_of_run[1:(a1[1])]))))
+  b2[1:(a2[1])] = (cumsum(as.numeric(!duplicated(choices_of_run[1:(a2[1])]))))
+  b3[1:(a3[1])] = (cumsum(as.numeric(!duplicated(choices_of_run[1:(a3[1])]))))
+  b4[1:(a4[1])] = (cumsum(as.numeric(!duplicated(choices_of_run[1:(a4[1])]))))
+  
+  # occurence[i] to occurence[i+1]
+  
+  for(i in 2:length(a1)){
+    b1[(a1[i-1]+1):(a1[i]-1)]<-cumsum(as.numeric(!duplicated(choices_of_run[(a1[i-1]+1):(a1[i]-1)])))
+  }
+  
+  for(i in 2:length(a2)){
+    b2[(a2[i-1]+1):(a2[i]-1)]<-cumsum(as.numeric(!duplicated(choices_of_run[(a2[i-1]+1):(a2[i]-1)])))
+  }
+  
+  for(i in 2:length(a3)){
+    b3[(a3[i-1]+1):(a3[i]-1)]<-cumsum(as.numeric(!duplicated(choices_of_run[(a3[i-1]+1):(a3[i]-1)])))
+  }
+  
+  for(i in 2:length(a4)){
+    b4[(a4[i-1]+1):(a4[i]-1)]<-cumsum(as.numeric(!duplicated(choices_of_run[(a4[i-1]+1):(a4[i]-1)])))
+  }
+  
+  # last occurence to last trial
+  if(a1[length(a1)]<length(choices_of_run)){
+    b1[(a1[length(a1)]+1):(length(choices_of_run))]<-cumsum(as.numeric(!duplicated(choices_of_run[(a1[length(a1)]+1):(length(choices_of_run))])))
+  }
+  
+  if(a2[length(a2)]<length(choices_of_run)){
+    b2[(a2[length(a2)]+1):(length(choices_of_run))]<-cumsum(as.numeric(!duplicated(choices_of_run[(a2[length(a2)]+1):(length(choices_of_run))])))
+  }
+  
+  if(a3[length(a3)]<length(choices_of_run)){
+    b3[(a3[length(a3)]+1):(length(choices_of_run))]<-cumsum(as.numeric(!duplicated(choices_of_run[(a3[length(a3)]+1):(length(choices_of_run))])))
+  }
+  
+  if(a4[length(a4)]<length(choices_of_run)){
+    b4[(a4[length(a4)]+1):(length(choices_of_run))]<-cumsum(as.numeric(!duplicated(choices_of_run[(a4[length(a4)]+1):(length(choices_of_run))])))
+  }
+  
+  # chosen options are 0
+  b1[a1]<-0
+  b2[a2]<-0
+  b3[a3]<-0
+  b4[a4]<-0
+  
+  # diagnostics
+  cbind(choices_of_run, b1) # 1 is okay
+  cbind(choices_of_run, b2) # 2 is okay
+  cbind(choices_of_run, b3) # 3 is okay
+  cbind(choices_of_run, b4) # 4 is okay
+  
+  # insert to result matrix
+  result_matrix[,1] = b1
+  result_matrix[,2] = b2
+  result_matrix[,3] = b3
+  result_matrix[,4] = b4
+  
+  return(result_matrix)
+  
+}
   
 
 ##########################################################################
@@ -123,10 +213,11 @@ for (id_ in 0:(num_instances-1)){
 #               stan_model legend                  # 
 #--------------------------------------------------#
 # 1: ss_q_learning_model_seperate_lr.stan
-# 2: ss_q_learning_model_single_lr.stan
+# 2: ms_q_learning_model_single_lr.stan
 # 3: BayesSM_ss_model.stan
 # 4: BayesSMEP_ss_model.stan
 # 5: BayesSME_ss_model.stan
+# 6: ms_q_learning_model_unique_bandits_heuristic.stan
 
 fit_model_to_rnn_data <- function(stan_models # vector of integers according to stan_model legend
                                   , path_to_preprocessed_data = 'data/intermediate_data/modeling/preprocessed_data_for_modeling'
@@ -244,6 +335,35 @@ for (ins in c(1)){
           n_parameters = 2
           n_runs = 10 
           n_parameter_columns = n_parameters * n_runs
+          
+          # my_inits <- function(){
+          #   list(
+          #     beta  = 1,
+          #     phi = 0
+          #   )}
+        }
+        
+        if(stan_model == 6){
+          model_file = paste0(cognitive_model_directory,'ms_q_learning_model_unique_bandits_heuristic.stan')
+          
+          # make stan model a global variable
+          my_stan_model <<- stan_model(model_file)
+          
+          n_parameters = 3
+          n_runs = 10 
+          n_parameter_columns = n_parameters * n_runs
+          
+          # create bandit heuristic predictor
+          uni = array(0, c(n_runs, nTrials, 4))
+          
+          for (s in 1:n_runs){
+            uni[s,,] = get_bandit_heuristic_predictor(choice[s,])
+          }
+          
+          # browser()
+          
+          # append to data
+          my_data$uni = uni
           
           # my_inits <- function(){
           #   list(

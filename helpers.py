@@ -43,11 +43,14 @@ class zip2csv():
 function converts float with dot to string with _
 """
 
-def dot2_(num):
+def dot2_(num, is_lr = False):
     try: 
         res = str(round(num, 2)).replace('.', '_')
     except: 
         res = 'n'
+    # do not round if it is a learning_rate
+    if is_lr:
+        res = str(num).replace('.', '_')
     return(res)
 
 """
@@ -65,8 +68,7 @@ class feather_class():
         
     def create_feather(self, rnn_type, is_noise, train_sd, id_, test_sd_str, test_sd_num, reward_type):
         
-        
-        file_name = self.feather_file_name.format(reward_type, train_sd, id_, test_sd_str)
+        file_name = self.feather_file_name.format(rnn_type, train_sd, id_, test_sd_str)
         # complete_string = self.path_to_test_runs + '\{}'.format(file_name)
                 
         # os.chdir(self.path_of_feather_file)
@@ -78,6 +80,8 @@ class feather_class():
         # pdb.set_trace()
         
         mult_df = all_test_runs.query('rnn_test_sd == {}'.format(test_sd_num))
+        
+        
 
         # indices = mult_df.index.names
         

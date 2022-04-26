@@ -245,6 +245,36 @@ class bandit:
                 
             return rewards, r_probs
         
+        if self.bandit_type == 'stationary' and self.dependant == False:            
+            
+            # randomly assign best bandit
+            rand_int     = np.random.randint(self.arms) 
+            
+            # initialise obtained reward prob array
+            r_probs = np.zeros([self.num_steps, self.arms])
+            
+            # dependant arms (reward prob best arm 'p', all other 1-'p')
+            r_probs[:]   = .5
+            r_probs[:, rand_int]   = self.bandit_parameter
+            
+            
+            # calculate rewards        
+            rewards      = np.zeros([self.num_steps, self.arms])
+            
+            if self.reward_type == 'binary':
+                # perform bernoulli trials with reward probs
+                random_numb  = np.random.rand(self.num_steps, self.arms)
+                rewards = (r_probs > random_numb) * 1.
+                
+                if self.punish:
+                    rewards = 2*rewards-1
+            
+            if self.reward_type == 'continuous':
+                # mean center rewards
+                rewards = r_probs - np.mean(r_probs)
+                
+            return rewards, r_probs
+        
         if self.bandit_type == 'daw_et_al_2006':
             
             # decay parameter
@@ -306,12 +336,12 @@ class bandit:
             # rewarded bandit is rewarded with fixed ratio, punished otherwise
             # unrewarded bandit has reward = 0 
             r_probs[:]   = 0
-            r_probs[:, 1]   = - 0.2
+            r_probs[:, 1]   = - 1/8
             
             r_probs[::int(np.reciprocal(self.bandit_parameter)), 1] = 1
             
             # extinction phase
-            r_probs[int(self.num_steps/2):, 1] = - 0.2
+            r_probs[int(self.num_steps/2):, 1] = - 1/8
             
             rewards = r_probs
                 
@@ -328,7 +358,7 @@ class bandit:
             # rewarded bandit is rewarded with fixed ratio, punished otherwise
             # unrewarded bandit has reward = 0 
             r_probs[:]   = 0
-            r_probs[:, 1]   = - 0.2
+            r_probs[:, 1]   = - 1/8
             
             # select reward with variable ratio
             sample = r_probs[:int(self.num_steps/2), 1]

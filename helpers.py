@@ -44,6 +44,10 @@ function converts float with dot to string with _
 """
 
 def dot2_(num, is_lr = False):
+    
+    if isinstance(num, str):
+        return(num[0:3])
+    
     try: 
         res = str(round(num, 2)).replace('.', '_')
     except: 

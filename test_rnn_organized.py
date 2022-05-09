@@ -7,12 +7,21 @@ Created on Thu Mar  3 11:29:28 2022
 
 from classes.bandits import fixed_bandit_class as fbc
 from classes.bandits import bandit_class as bc
-from classes.neural_networks import network_class_organized_IP as nn
+from classes.neural_networks import network_class_organized as nn
 from matplotlib import pyplot as plt
 import tensorflow as tf
 import numpy as np
 import pandas as pd
 import pickle
+
+
+daw_walks = ['classes/bandits/Daw2006_payoffs1.csv',
+             'classes/bandits/Daw2006_payoffs2.csv',
+             'classes/bandits/Daw2006_payoffs3.csv']
+
+for id_ in range(0,20):
+    for daw_walk in range(3):
+    
 
 train_mab = bc.bandit(bandit_type = 'restless'
                     , arms = 4
@@ -28,7 +37,7 @@ nnet = nn.neural_network(bandit = train_mab
                     , rnn_type = 'lstm'
                     , learning_algorithm = 'a2c'
                     , n_iterations = 50000
-                    , model_id= 99)
+                    , model_id= 10)
 
 # train the rnn
 nnet.train()
@@ -41,8 +50,7 @@ nnet.reset()
 # daw walk
 test_mab = 'classes/bandits/Daw2006_payoffs3.csv'
 
-
-nnet.test(bandit = test_mab, bandit_param_range = [3], n_runs = 1)
+nnet.test(bandit = test_mab, bandit_param_range = [1], n_runs = 1)
 
 # df = pickle.load(open('data/rnn_raw_data/rnn_rei_nh_48_lr_0_0001_n_n_p_0_ew_0_vw_0_5_dr_0_5_res_d_f_p_0_1_rt_con_a_4_n_300_te_50000_id_7_test_b_res_p_0_2', 'rb'))
 

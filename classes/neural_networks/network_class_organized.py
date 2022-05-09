@@ -682,7 +682,7 @@ class neural_network:
         if self.noise == 'none':
             self.noise_parameter = 0
 
-        self.model_name = '{}_{}_nh_{}_lr_{}_n_{}_p_{}_ew__vw_{}_dr_{}_{}_d_{}_p_{}_rt_{}_a_{}_n_{}_te_{}_id_{}'.format(self.rnn_type
+        self.model_name = '{}_{}_nh_{}_lr_{}_n_{}_p_{}_ew_{}_vw_{}_dr_{}_{}_d_{}_p_{}_rt_{}_a_{}_n_{}_te_{}_id_{}'.format(self.rnn_type
                                                                 , self.learning_algorithm[0:3]
                                                                 , self.n_hidden_neurons
                                                                 , dot2_(self.learning_rate, is_lr = True)
@@ -837,6 +837,8 @@ class neural_network:
                         # print('Testing Model: {}'.format(self.model_name))
                         ckpt = tf.train.get_checkpoint_state(self.model_path)
                         
+                        print(self.model_path)
+                        
                         self.saver.restore(sess,ckpt.model_checkpoint_path)
                         
                         # get test dataframe                       
@@ -870,6 +872,9 @@ class neural_network:
                         # add df to df_list
                         
                         df_list.append(df)
+                        
+                        print('ACCURACY')
+                        print(np.mean(df['accuracy']))
                         
                         
                     

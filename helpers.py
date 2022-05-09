@@ -68,6 +68,8 @@ class feather_class():
         
     def create_feather(self, rnn_type, is_noise, train_sd, id_, test_sd_str, test_sd_num, reward_type):
         
+        # pdb.set_trace()
+        
         file_name = self.feather_file_name.format(rnn_type, train_sd, id_, test_sd_str)
         # complete_string = self.path_to_test_runs + '\{}'.format(file_name)
                 
@@ -77,10 +79,11 @@ class feather_class():
         
         # os.chdir('\..\..')
         
-        # pdb.set_trace()
+        #pdb.set_trace()
         
-        mult_df = all_test_runs.query('rnn_test_sd == {}'.format(test_sd_num))
+        # mult_df = all_test_runs.query('rnn_test_sd == {}'.format(test_sd_num))
         
+        mult_df = all_test_runs.reset_index()
         
 
         # indices = mult_df.index.names

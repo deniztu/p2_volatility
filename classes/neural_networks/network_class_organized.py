@@ -91,7 +91,7 @@ class conditioning_bandit():
 # class to define the graph
 class AC_Network():
     def __init__(self, trainer, noise, rnn_type, noise_parameter
-                 , n_hidden_neurons, n_arms, entropy_loss_weight
+                 , n_hidden_neurons, n_arms, entropy_loss_weight ####Change IP
                  , value_loss_weight, learning_algorithm):
         '''
         Returns the graph. 
@@ -113,7 +113,14 @@ class AC_Network():
         input_                     = tf.concat([self.prev_rewardsch, self.prev_actions_onehot],1)
 
         self.actions             = tf.placeholder(shape=[None], dtype=tf.int32)
-        self.actions_onehot      = tf.one_hot(self.actions, n_arms, dtype=tf.float32)       
+        self.actions_onehot      = tf.one_hot(self.actions, n_arms, dtype=tf.float32) 
+        
+        if entropy_loss_weight == 'linear':
+            self.entropy_loss_weight = tf.placeholder("float", None) ####Change IP
+            
+        else: 
+            self.entropy_loss_weight = entropy_loss_weight
+
 
         #Recurrent network for temporal dependencies
         nb_units = n_hidden_neurons
@@ -190,7 +197,7 @@ class AC_Network():
         
         self.policy_loss = - tf.reduce_sum(tf.log(self.responsible_outputs + 1e-7) * self.advantages)
         
-        self.loss_entropy = self.entropy * entropy_loss_weight
+        self.loss_entropy = self.entropy * self.entropy_loss_weight
        
         if learning_algorithm == 'a2c':
         
@@ -203,11 +210,11 @@ class AC_Network():
             
             self.value_loss = 0.5 * tf.reduce_sum(tf.square(self.target_v - tf.reshape(self.value,[-1]))) # add value loss weight
 
-            self.loss        = value_loss_weight *self.value_loss + self.policy_loss - self.entropy * entropy_loss_weight # add entropy_loss_weight
+            self.loss        = value_loss_weight *self.value_loss + self.policy_loss - self.loss_entropy # add entropy_loss_weight
             
         if learning_algorithm == 'reinforce':
             
-            self.loss        = self.policy_loss - self.entropy * entropy_loss_weight
+            self.loss        = self.policy_loss - self.loss_entropy
         
         #Get gradients from network using losses
         local_vars            = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
@@ -222,7 +229,7 @@ class AC_Network():
 class Worker():
     def __init__(self, game, trainer, model_path, model_name, noise
                  , path_to_save_progress, n_hidden_neurons, n_arms, num_steps
-                 , n_iterations, rnn_type, noise_parameter, entropy_loss_weight
+                 , n_iterations, rnn_type, noise_parameter, entropy_loss_weight    ####Change IP
                  , value_loss_weight, learning_algorithm):
         
         self.model_path            = model_path
@@ -237,7 +244,7 @@ class Worker():
         self.ac_network = AC_Network(trainer = trainer, noise = noise, rnn_type = rnn_type
                                      , noise_parameter = noise_parameter
                                      , n_hidden_neurons = n_hidden_neurons, n_arms = n_arms
-                                     , entropy_loss_weight = entropy_loss_weight 
+                                     , entropy_loss_weight = entropy_loss_weight
                                      , value_loss_weight = value_loss_weight
                                      , learning_algorithm = learning_algorithm)
         self.env      = game
@@ -249,8 +256,9 @@ class Worker():
         self.rnn_type = rnn_type
         self.noise_parameter = noise_parameter
         self.noise = noise
+        self.entropy_loss_weight = entropy_loss_weight
         
-    def train(self, rollout, sess, gamma, bootstrap_value):
+    def train(self, rollout, sess, gamma, bootstrap_value, entr_):
         '''
         train method
         '''        
@@ -280,16 +288,38 @@ class Worker():
        
         if self.rnn_type == 'lstm' and self.learning_algorithm == 'a2c':
             
+            print('shit!')
+            print(self.entropy_loss_weight)
+            
             rnn_state = self.ac_network.state_init ###change
-            feed_dict = {self.ac_network.target_v:discounted_rewards,
-                         self.ac_network.prev_rewardsch:np.vstack(prev_rewards_ch),
-                         self.ac_network.prev_actions:prev_actions,
-                         self.ac_network.h_noise:np.vstack(h_noises), # does this work?
-                         self.ac_network.actions:actions,
-                         self.ac_network.timestep:np.vstack(timesteps),
-                         self.ac_network.advantages:advantages,
-                         self.ac_network.state_in[0]:rnn_state[0],
-                         self.ac_network.state_in[1]:rnn_state[1]}          
+            
+            
+            if self.entropy_loss_weight == 'linear':
+                
+                print(entr_)
+                
+                feed_dict = {self.ac_network.target_v:discounted_rewards,
+                             self.ac_network.prev_rewardsch:np.vstack(prev_rewards_ch),
+                             self.ac_network.prev_actions:prev_actions,
+                             self.ac_network.h_noise:np.vstack(h_noises), 
+                             self.ac_network.actions:actions,
+                             self.ac_network.timestep:np.vstack(timesteps),
+                             self.ac_network.advantages:advantages,
+                             self.ac_network.state_in[0]:rnn_state[0],
+                             self.ac_network.state_in[1]:rnn_state[1],
+                             self.ac_network.entropy_loss_weight: entr_}   
+                
+            else:
+                feed_dict = {self.ac_network.target_v:discounted_rewards,
+                             self.ac_network.prev_rewardsch:np.vstack(prev_rewards_ch),
+                             self.ac_network.prev_actions:prev_actions,
+                             self.ac_network.h_noise:np.vstack(h_noises),
+                             self.ac_network.actions:actions,
+                             self.ac_network.timestep:np.vstack(timesteps),
+                             self.ac_network.advantages:advantages,
+                             self.ac_network.state_in[0]:rnn_state[0],
+                             self.ac_network.state_in[1]:rnn_state[1]}  
+                
 
             v_l, p_l,e_l,v_n,_, grad_ = sess.run([self.ac_network.value_loss, # added AV
                                                   self.ac_network.policy_loss,
@@ -420,6 +450,10 @@ class Worker():
         ##################################################################################
         
         episode_count = 0
+
+        entr_ = 1
+
+
         while True:
             episode_buffer, state_mean_arr, added_noise_arr = [], [], []
             episode_reward, episode_step_count = 0, 0
@@ -453,13 +487,26 @@ class Worker():
                 #Take an action using probabilities from policy network output.
                 
                 if self.rnn_type == 'lstm':
+                    
+                    if self.entropy_loss_weight == 'linear':
                 
-                    feed_dict = {self.ac_network.prev_rewardsch:[[rch]],
-                                 self.ac_network.prev_actions:[a],
-                                 self.ac_network.timestep:[[t]],
-                                 self.ac_network.state_in[0]:rnn_state[0],
-                                 self.ac_network.state_in[1]:rnn_state[1],
-                                 self.ac_network.h_noise:h_noise}
+                        feed_dict = {self.ac_network.prev_rewardsch:[[rch]],
+                                     self.ac_network.prev_actions:[a],
+                                     self.ac_network.timestep:[[t]],
+                                     self.ac_network.state_in[0]:rnn_state[0],
+                                     self.ac_network.state_in[1]:rnn_state[1],
+                                     self.ac_network.h_noise:h_noise, 
+                                     self.ac_network.entropy_loss_weight:entr_}
+                        
+                    else:
+                        
+                        feed_dict = {self.ac_network.prev_rewardsch:[[rch]],
+                                     self.ac_network.prev_actions:[a],
+                                     self.ac_network.timestep:[[t]],
+                                     self.ac_network.state_in[0]:rnn_state[0],
+                                     self.ac_network.state_in[1]:rnn_state[1],
+                                     self.ac_network.h_noise:h_noise}
+                        
                 
                 if self.rnn_type == 'rnn':
                     
@@ -467,7 +514,8 @@ class Worker():
                                  self.ac_network.prev_actions:[a],
                                  self.ac_network.timestep:[[t]],
                                  self.ac_network.h_in:rnn_state,
-                                 self.ac_network.h_noise:h_noise}
+                                 self.ac_network.h_noise:h_noise, 
+                                 self.ac_network.entropy_loss_weight:entr_} ####Change IP
                                     
                 if self.learning_algorithm == 'a2c':
                 
@@ -501,6 +549,7 @@ class Worker():
                 # for tensorboard: if rewards 1, -1
                 episode_reward     += (rch + 1)/2. # ToDo
                 episode_step_count += 1 
+
                 # state_mean_arr.append(state_mean)
                 # added_noise_arr.append(added_noise)
                 episode_buffer.append([a,rch,t, h_noise, v[0,0], d])
@@ -528,10 +577,10 @@ class Worker():
             if len(episode_buffer) != 0 and train == True:
                 
                 if self.learning_algorithm == 'a2c':    
-                    v_l, p_l,e_l,g_n,v_n, gg = self.train(episode_buffer,sess,gamma,0.0)
+                    v_l, p_l,e_l,g_n,v_n, gg = self.train(episode_buffer,sess,gamma,0.0, entr_) #added
                     
                 if self.learning_algorithm == 'reinforce':    
-                    p_l,e_l,g_n,v_n, gg = self.train(episode_buffer,sess,gamma,0.0)
+                    p_l,e_l,g_n,v_n, gg = self.train(episode_buffer,sess,gamma,0.0, entr_) #added
                 
             # stop after first episode if model is tested
             if train == False:
@@ -581,6 +630,10 @@ class Worker():
                 self.summary_writer.flush()
                                 
             episode_count += 1
+            
+            # entropy annealing
+            entr_ = entr_ - 1/self.n_iterations ####Change IP
+            
 
 
 class neural_network:
@@ -629,7 +682,7 @@ class neural_network:
         if self.noise == 'none':
             self.noise_parameter = 0
 
-        self.model_name = '{}_{}_nh_{}_lr_{}_n_{}_p_{}_ew_{}_vw_{}_dr_{}_{}_d_{}_p_{}_rt_{}_a_{}_n_{}_te_{}_id_{}'.format(self.rnn_type
+        self.model_name = '{}_{}_nh_{}_lr_{}_n_{}_p_{}_ew__vw_{}_dr_{}_{}_d_{}_p_{}_rt_{}_a_{}_n_{}_te_{}_id_{}'.format(self.rnn_type
                                                                 , self.learning_algorithm[0:3]
                                                                 , self.n_hidden_neurons
                                                                 , dot2_(self.learning_rate, is_lr = True)
@@ -731,26 +784,35 @@ class neural_network:
                 # zip_name = self.model_name + '_' + bandit_zip_name
                                             
                 for rin in range(num_rins):
+                    
+                    # get daw bandits if test_mab is str
+                    if isinstance(bandit, str) and 'Daw2006' in bandit:
+                        
+                        df = pd.read_csv(bandit)
+                        # convert datafame into bandit class
+                        self.bandit = fdbc.load_daw_bandit(df)
+                        
+                    else: # if not daw bandits
                 
-                    # extract bandit
-                    
-                    bandit_zip = zip2csv(path_to_data = path_to_fixed_bandits, zip_file_name = bandit_zip_name)
-                    
-                    bandit_file_name = bandit_zip_name.replace('.zip', '_rin_{}.csv'.format(str(rin)))
-                    
-                    bandit_zip.extract_file(bandit_file_name)
-                    
-                    fixed_test_bandit = pd.read_csv(bandit_file_name)
-                    
-                    # convert datafame into bandit class
-                    self.bandit = fbc.load_bandit(fixed_test_bandit)
-                    
-                    # assign sd
-                    self.bandit.bandit_parameter = sd_
-
-                    # delete presaved bandit
-                    bandit_zip.delete_file(bandit_file_name)
-                    
+                        # extract bandit
+                        
+                        bandit_zip = zip2csv(path_to_data = path_to_fixed_bandits, zip_file_name = bandit_zip_name)
+                        
+                        bandit_file_name = bandit_zip_name.replace('.zip', '_rin_{}.csv'.format(str(rin)))
+                        
+                        bandit_zip.extract_file(bandit_file_name)
+                        
+                        fixed_test_bandit = pd.read_csv(bandit_file_name)
+                        
+                        # convert datafame into bandit class
+                        self.bandit = fbc.load_bandit(fixed_test_bandit)
+                        
+                        # assign sd
+                        self.bandit.bandit_parameter = sd_
+    
+                        # delete presaved bandit
+                        bandit_zip.delete_file(bandit_file_name)
+                        
                     # test rnn
                     # create the graph
                     self.worker  = Worker(game = conditioning_bandit(self.bandit)
@@ -815,7 +877,7 @@ class neural_network:
                     self.reset()
         
             # create list with names of the index of the multiindex df
-            multiindex_list = ['rnn_type', 'learning_algorithm', 'noise', 'entropy_loss_weight', 'train_sd'
+            multiindex_list = ['rnn_type', 'learning_algorithm', 'noise',  'train_sd' ####Change IP
                                ,'rnn_id', 'test_sd', 'run', 'reward_instance']
             
             # concat df_list rowwise

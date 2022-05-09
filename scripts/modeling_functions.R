@@ -29,7 +29,7 @@ preprocess_rnn_data_for_modeling <- function(reward_type
                                              , train_sds
                                              , sd_range
                                              , path_to_save_formatted_data = 'data/intermediate_data/modeling/preprocessed_data_for_modeling'){
-for (id_ in 9){
+for (id_ in c(0)){
 # for (id_ in 5:(num_instances-1)){
       for (train_sd in train_sds){
           for (sd_ in sd_range){
@@ -62,7 +62,7 @@ for (id_ in 9){
             
             # get rewards TODO check for binary vs continuous
             
-            if (reward_type == 'continuous'){
+            if (reward_type == ''){ # changed
               
               rewards = df[,c('p_rew_1', 'p_rew_2', 'p_rew_3', 'p_rew_4')]
               
@@ -196,6 +196,44 @@ get_bandit_heuristic_predictor = function(choices_of_run){
   return(result_matrix)
   
 }
+
+###############################################################################
+# Function calculates the bandit trials not chosen predictor                  #
+# returns a array with number of trials Bandits not sampled consecutive times #
+###############################################################################
+
+get_trials_not_chosen <- function(pp_file = res){
+  
+  NS=pp_file$nSubjects
+  NT=pp_file$nTrials
+  choices<-pp_file$choice
+  trials_not_chosen<-array(0,c(NS,NT,4))
+  for (s in 1:NS) {
+    for (t in 1:NT[s]) {
+      if (choices!=0){
+        trials_not_chosen[s,t,1]<-ifelse(choices[s,t]==1, 0, t)
+        if (trials_not_chosen[s,t,1]!=0 & max(which(trials_not_chosen[s,1:t,1]==0))>-Inf){
+          trials_not_chosen[s,t,1]<-(t-max(which(trials_not_chosen[s,1:t,1]==0)))
+        }
+        trials_not_chosen[s,t,2]<-ifelse(choices[s,t]==2, 0, t)
+        if (trials_not_chosen[s,t,2]!=0 & max(which(trials_not_chosen[s,1:t,2]==0))>-Inf){
+          trials_not_chosen[s,t,2]<-(t-max(which(trials_not_chosen[s,1:t,2]==0)))
+        }
+        trials_not_chosen[s,t,3]<-ifelse(choices[s,t]==3, 0, t)
+        if (trials_not_chosen[s,t,3]!=0 & max(which(trials_not_chosen[s,1:t,3]==0))>-Inf){
+          trials_not_chosen[s,t,3]<-(t-max(which(trials_not_chosen[s,1:t,3]==0)))
+        }
+        trials_not_chosen[s,t,4]<-ifelse(choices[s,t]==4, 0, t)
+        if (trials_not_chosen[s,t,4]!=0 & max(which(trials_not_chosen[s,1:t,4]==0))>-Inf){
+          trials_not_chosen[s,t,4]<-(t-max(which(trials_not_chosen[s,1:t,4]==0)))
+        }
+      }
+    }
+  }
+  
+  return(trials_not_chosen)
+  
+}
   
 
 ##########################################################################
@@ -215,9 +253,10 @@ get_bandit_heuristic_predictor = function(choices_of_run){
 # 1: ss_q_learning_model_seperate_lr.stan
 # 2: ms_q_learning_model_single_lr.stan
 # 3: BayesSM_ss_model.stan
-# 4: BayesSMEP_ss_model.stan
+# 4: BayesSMEP_ms_model.stan
 # 5: BayesSME_ss_model.stan
 # 6: ms_q_learning_model_unique_bandits_heuristic.stan
+# 7: ms_q_learning_model_trials_not_chosen_heuristic.stan
 
 fit_model_to_rnn_data <- function(stan_models # vector of integers according to stan_model legend
                                   , path_to_preprocessed_data = 'data/intermediate_data/modeling/preprocessed_data_for_modeling'
@@ -240,7 +279,10 @@ for (ins in c(1)){
       sd_ = gsub('[.]', '_', sd_)
       
       # insert instance and sd
-      preprocessed_file_name_ = sprintf(preprocessed_file_name, ins, sd_)
+      # preprocessed_file_name_ = sprintf(preprocessed_file_name, ins, sd_)
+      # file_name = 'pp_data_test_lstm_a2c_ew_0_05.RData'
+      preprocessed_file_name_ = preprocessed_file_name
+      
       
       # load preprocessed data
       full_preprocessed_file_path <- paste0(path_to_preprocessed_data,'/',preprocessed_file_name_)
@@ -350,8 +392,10 @@ for (ins in c(1)){
           my_stan_model <<- stan_model(model_file)
           
           n_parameters = 3
-          n_runs = 10 
+          n_runs = 1#10
           n_parameter_columns = n_parameters * n_runs
+          
+          #browser()
           
           # create bandit heuristic predictor
           uni = array(0, c(n_runs, nTrials, 4))
@@ -360,7 +404,7 @@ for (ins in c(1)){
             uni[s,,] = get_bandit_heuristic_predictor(choice[s,])
           }
           
-          # browser()
+
           
           # append to data
           my_data$uni = uni
@@ -371,6 +415,29 @@ for (ins in c(1)){
           #     phi = 0
           #   )}
         }
+        
+        if(stan_model == 7){
+          model_file = paste0(cognitive_model_directory,'ms_q_learning_model_trials_not_chosen_heuristic.stan')
+          
+          # make stan model a global variable
+          my_stan_model <<- stan_model(model_file)
+          
+          n_parameters = 3
+          n_runs = 1#10
+          n_parameter_columns = n_parameters * n_runs
+          
+          #browser()
+          
+          # create bandit heuristic predictor
+          
+          trials_not_chosen = get_trials_not_chosen(pp_file = my_data)
+          
+          
+          # append to data
+          my_data$trials_not_chosen = trials_not_chosen
+        }
+        
+        
         
         # posterior sampling
         my_samples <- sampling(my_stan_model

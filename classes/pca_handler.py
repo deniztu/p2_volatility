@@ -12,6 +12,7 @@ import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler 
 import pickle
+import pdb
 
 class pca_handler():
     def __init__(self, path_to_rnn_raw_data = 'data/rnn_raw_data/' 
@@ -41,9 +42,11 @@ class pca_handler():
         
         # apply pca for each run
         for run in range(num_runs):
+            
+            # pdb.set_trace()
              
             # hierarchical indexing, run is 4th position (see df)   
-            df_run = df.loc[:,:,:,run,:][filter_col]
+            df_run = df.loc[:,:,:,:,:,:,:,run,:][filter_col]
             
             # instantiate PCA class
             pca = PCA()
@@ -60,7 +63,7 @@ class pca_handler():
             # add columns later used as index
             pc_df['rnn_type'] = df.index[0][0]
             pc_df['rnn_id'] = df.index[0][1]
-            pc_df['rnn_test_sd'] = df.index[0][2]
+            pc_df['test_sd'] = df.index[0][2]
             pc_df['run'] = run
             pc_df['reward_instance'] = df.index[0][4]
         
@@ -71,7 +74,7 @@ class pca_handler():
             pca_object_per_run.append(pca)
         
         # create list with names of the index of the multiindex df
-        multiindex_list = ['rnn_type', 'rnn_id', 'rnn_test_sd', 'run', 'reward_instance']
+        multiindex_list = ['rnn_type', 'rnn_id', 'test_sd', 'run', 'reward_instance']
         
         # concat df_list rowwise
         all_dfs = pd.concat(df_list)

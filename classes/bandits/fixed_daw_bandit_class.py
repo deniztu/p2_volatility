@@ -31,6 +31,9 @@ class load_daw_bandit:
 
         # get rewards
         rewards = arr[:,:self.arms]
+        
+        # scale rewards between 0-1 (max points 100)
+        rewards = rewards/100
 
         # mean center rewards
         centered_pay_off_arr = rewards - np.mean(rewards)

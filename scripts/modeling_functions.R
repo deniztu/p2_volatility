@@ -29,8 +29,8 @@ preprocess_rnn_data_for_modeling <- function(reward_type
                                              , train_sds
                                              , sd_range
                                              , path_to_save_formatted_data = 'data/intermediate_data/modeling/preprocessed_data_for_modeling'){
-for (id_ in c(0)){
-# for (id_ in 5:(num_instances-1)){
+# for (id_ in c(0)){
+for (id_ in 1:(num_instances-1)){
       for (train_sd in train_sds){
           for (sd_ in sd_range){
             
@@ -42,9 +42,7 @@ for (id_ in c(0)){
             is_noise = tolower(substring(is_noise, 1, 1))
             # is_noise = 'n' #added
             
-            file_name = sprintf(file_string, rnn_type, is_noise, reward_type, train_sd, id_, test_sd)
-            
-            # file_name = 'lstm_a2c_n_f_rt_continuous_train_sd_0_1_id_0_test_sd_0_1'
+            file_name = sprintf(file_string, rnn_type, train_sd, id_, test_sd)
             
             df = arrow::read_feather(paste0(path_to_save_formatted_data,'/',file_name))
             
@@ -98,7 +96,7 @@ for (id_ in c(0)){
             
             
             # get file name
-            preprocessed_file_name_ = sprintf(file_string, rnn_type, is_noise, reward_type, train_sd, id_, test_sd)
+            preprocessed_file_name_ = file_name
             
             # save formatted data
             res = list(model = preprocessed_file_name_, choices = choices, chosen_rewards = chosen_rewards, rewards = rewards
@@ -271,7 +269,7 @@ fit_model_to_rnn_data <- function(stan_models # vector of integers according to 
   # source_python("helpers.py")
   
 # for (ins in c(3,4,5,6,7,9)){
-for (ins in c(1)){
+for (ins in c(num_instances-1)){
     for (sd_ in sd_range){
      
       # convert decimal point to '_'
@@ -325,7 +323,7 @@ for (ins in c(1)){
           my_stan_model <<- stan_model(model_file)
           
           n_parameters = 2
-          n_runs = 10 
+          n_runs = 1 
           n_parameter_columns = n_parameters * n_runs
           
           # my_inits <- function(){
@@ -358,7 +356,7 @@ for (ins in c(1)){
           my_stan_model <<- stan_model(model_file)
           
           n_parameters = 3
-          n_runs = 10 
+          n_runs = 1 
           n_parameter_columns = n_parameters * n_runs
           
           # my_inits <- function(){
@@ -462,12 +460,11 @@ for (ins in c(1)){
         # get results list
         stanfit = list(stanfit = my_samples, data = full_preprocessed_file_path)
         
-        # save result object (contains stan fit object + full_preprocessed_file_path)
-        df <- as.data.frame(stanfit$stanfit)
-        # save whole df as .RData
-        save(df, file = sprintf('%s/%s.RData', path_to_save_results, result_name))
+        # save whole stanfit as .RData
+        save(stanfit, file = sprintf('%s/%s.RData', path_to_save_results, result_name))
+
         # save only parameter columns as .feather (otherwise slow)
-        
+        df <- as.data.frame(stanfit$stanfit)
         df <- df[, 1:n_parameter_columns]
         write_feather(df, sprintf('%s/%s.feather', path_to_save_results, result_name))
         

@@ -11,21 +11,18 @@ source('modeling_functions.R')
 # move up two directories
 setwd('../')
 
-################################
-# Preprocess binary test files #
-################################
-
-debugonce(preprocess_rnn_data_for_modeling)
+#########################
+# Preprocess test files #
+#########################
 
 preprocess_rnn_data_for_modeling(rnn_type = 'lstm_a2c'
-                                 , file_string = '%s_n_%s_rt_%s_train_sd_%s_id_%s_daw_test_sd_%s'
+                                 , file_string = '%s_nh_48_lr_0_0001_n_n_p_0_ew_lin_vw_0_5_dr_0_5_res_d_f_p_%s_rt_con_a_4_n_300_te_50000_id_%s_test_b_daw_p_%s'
                                  , is_noise = FALSE
-                                 , num_instances = 1
+                                 , num_instances = 5
                                  , train_sds = c('0_1')
-                                 , sd_range = c(1)#seq(0.02, 0.32, 0.02)
+                                 , sd_range = c(1,2,3)#seq(0.02, 0.32, 0.02)
                                  , path_to_save_formatted_data = 'data/intermediate_data/modeling/preprocessed_data_for_modeling'
                                  , reward_type = '')
-
 
 
 ################################
@@ -48,10 +45,28 @@ fit_model_to_rnn_data(stan_models = c(2), preprocessed_file_name = 'pp_data_lstm
                       num_instances = 10, 
                       sd_range = c(0.32))
 
-### testing model for rnn
-fit_model_to_rnn_data(stan_models = c(7), preprocessed_file_name = 'pp_data_lstm_a2c_n_f_rt__train_sd_0_1_id_0_daw_test_sd_1.RData',
-                      num_instances = 1, 
-                      sd_range = c(0.1))#seq(0.02, 0.32, 0.02))
+### testing model for lstm ew 0.05
+
+#debugonce(fit_model_to_rnn_data)
+for (i in c(1:4)){
+  
+  for (m in c(2,6,7)){
+    
+    for (w in c(1,2,3)){
+      
+      file = sprintf('pp_data_lstm_a2c_nh_48_lr_0_0001_n_n_p_0_ew_0_05_vw_0_5_dr_0_5_res_d_f_p_0_1_rt_con_a_4_n_300_te_50000_id_%s_test_b_daw_p_%s.RData', i,w)
+      
+      fit_model_to_rnn_data(stan_models = c(m), preprocessed_file_name = file,
+                            num_instances = 1, 
+                            sd_range = c(1))
+      
+    }
+    
+  }
+  
+}
+
+
 
 
 
@@ -60,6 +75,8 @@ fit_model_to_rnn_data(stan_models = c(7), preprocessed_file_name = 'pp_data_lstm
 #                                  zip_file_name = 'rnn_n_f_p_0_res_rt_bin_d_f_p_0_1_a_4_n_300_te_50000_id_%s_res_rt_bin_p_%s_n_300_run_0.csv',
 #                                  num_instances = 10,
 #                                  sd_range = seq(0.02, 0.32, 0.02))
+
+
 
 
 

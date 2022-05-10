@@ -8,7 +8,7 @@ data {
 
 transformed data {
   vector[4] initV;  // initial values for V for each arm
-  initV = rep_vector(50.0, 4);
+  initV = rep_vector(0.5, 4);
 }
 
 parameters {

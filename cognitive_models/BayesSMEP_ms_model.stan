@@ -22,7 +22,7 @@ transformed data {
 }
 
 parameters {
-  real beta[nSubjects];
+  real<lower=0> beta[nSubjects];
   real phi[nSubjects];
   real rho[nSubjects];
 }

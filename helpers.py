@@ -96,9 +96,9 @@ class feather_class():
         
         final_df = mult_df.reset_index()
         
-        feather_file_name = '{}_n_{}_rt_{}_train_sd_{}_id_{}_test_sd_{}'.format(rnn_type, str(is_noise).lower()[0], reward_type, train_sd, id_, test_sd_str)
+        # feather_file_name = '{}_n_{}_rt_{}_train_sd_{}_id_{}_test_sd_{}'.format(rnn_type, str(is_noise).lower()[0], reward_type, train_sd, id_, test_sd_str)
         
-        final_df.to_feather(self.path_of_feather_file + '/{}'.format(feather_file_name))
+        final_df.to_feather(self.path_of_feather_file + '/{}'.format(file_name))
         
     def delete_feather(self, rnn_type, is_noise, train_sd, id_, test_sd_str, run, rin, reward_type):
         

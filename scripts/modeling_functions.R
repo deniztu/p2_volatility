@@ -30,7 +30,7 @@ preprocess_rnn_data_for_modeling <- function(reward_type
                                              , sd_range
                                              , path_to_save_formatted_data = 'data/intermediate_data/modeling/preprocessed_data_for_modeling'){
 # for (id_ in c(0)){
-for (id_ in 1:(num_instances-1)){
+for (id_ in c(0:(num_instances-1))){
       for (train_sd in train_sds){
           for (sd_ in sd_range){
             
@@ -248,13 +248,19 @@ get_trials_not_chosen <- function(pp_file = res){
 #--------------------------------------------------#
 #               stan_model legend                  # 
 #--------------------------------------------------#
-# 1: ss_q_learning_model_seperate_lr.stan
-# 2: ms_q_learning_model_single_lr.stan
-# 3: BayesSM_ss_model.stan
-# 4: BayesSMEP_ms_model.stan
-# 5: BayesSME_ss_model.stan
-# 6: ms_q_learning_model_unique_bandits_heuristic.stan
-# 7: ms_q_learning_model_trials_not_chosen_heuristic.stan
+# 1: ms_q_learning_model_single_lr.stan
+# 2: ms_q_learning_model_single_lr_perseveration.stan
+# 3: ms_q_learning_model_single_lr_perseveration_unique_bandits_heuristic.stan
+# 4: ms_q_learning_model_single_lr_perseveration_trials_not_chosen_heuristic.stan
+# 5: ms_q_learning_model_single_lr_unique_bandits_heuristic.stan
+# 6: ms_q_learning_model_single_lr_trials_not_chosen_heuristic.stan
+# 7: ms_q_learning_model_seperate_lr.stan
+# 8: ms_q_learning_model_seperate_lr_perseveration.stan
+# 9: ms_q_learning_model_seperate_lr_perseveration_unique_bandits_heuristic.stan
+# 10: ms_q_learning_model_seperate_lr_perseveration_trials_not_chosen_heuristic.stan
+# 11: ms_q_learning_model_seperate_lr_unique_bandits_heuristic.stan
+# 12: ms_q_learning_model_seperate_lr_trials_not_chosen_heuristic.stan
+
 
 fit_model_to_rnn_data <- function(stan_models # vector of integers according to stan_model legend
                                   , path_to_preprocessed_data = 'data/intermediate_data/modeling/preprocessed_data_for_modeling'
@@ -268,7 +274,6 @@ fit_model_to_rnn_data <- function(stan_models # vector of integers according to 
   # inside R, source Python script
   # source_python("helpers.py")
   
-# for (ins in c(3,4,5,6,7,9)){
 for (ins in c(num_instances-1)){
     for (sd_ in sd_range){
      
@@ -299,101 +304,42 @@ for (ins in c(num_instances-1)){
         # get model_file and inits according to stan_model
         
         if(stan_model == 1){
-          model_file = paste0(cognitive_model_directory, 'ms_q_learning_model_seperate_lr.stan')
-          
-          # make stan model a global variable
-          my_stan_model <<- stan_model(model_file)
-          
-          n_parameters = 3
-          n_runs = 10 
-          n_parameter_columns = n_parameters * n_runs
-          
-          # my_inits <- function(){
-          #   list(
-          #     alpha_pos_rpe = 0.5,
-          #     alpha_neg_rpe = 0.5,
-          #     beta  = 1
-          #   )}
-        }
-        
-        if(stan_model == 2){
           model_file = paste0(cognitive_model_directory, 'ms_q_learning_model_single_lr.stan')
           
           # make stan model a global variable
           my_stan_model <<- stan_model(model_file)
           
-          n_parameters = 2
+          n_parameters = 3
           n_runs = 1 
           n_parameter_columns = n_parameters * n_runs
           
           # my_inits <- function(){
-          #   list(
-          #     alpha = 0.5,
-          #     beta  = 1
-          #   )}
+          #   list()}
+        }
+        
+        if(stan_model == 2){
+          model_file = paste0(cognitive_model_directory, 'ms_q_learning_model_single_lr_perseveration.stan')
+          
+          # make stan model a global variable
+          my_stan_model <<- stan_model(model_file)
+          
+          n_parameters = 3
+          n_runs = 1 
+          n_parameter_columns = n_parameters * n_runs
+          
+          # my_inits <- function(){
+          #   list()}
         }
         
         if(stan_model == 3){
-          model_file = paste0(cognitive_model_directory,'BayesSM_ms_model.stan')
+          model_file = paste0(cognitive_model_directory,'ms_q_learning_model_single_lr_perseveration_unique_bandits_heuristic.stan')
           
           # make stan model a global variable
           my_stan_model <<- stan_model(model_file)
           
-          n_parameters = 1
-          n_runs = 10 
+          n_parameters = 4
+          n_runs = 1
           n_parameter_columns = n_parameters * n_runs
-          
-          # my_inits <- function(){
-          #   list(
-          #     beta  = 1
-          #   )}
-        }
-        
-        if(stan_model == 4){
-          model_file = paste0(cognitive_model_directory,'BayesSMEP_ms_model.stan')
-          
-          # make stan model a global variable
-          my_stan_model <<- stan_model(model_file)
-          
-          n_parameters = 3
-          n_runs = 1 
-          n_parameter_columns = n_parameters * n_runs
-          
-          # my_inits <- function(){
-          #   list(
-          #     beta  = 1,
-          #     phi = 0,
-          #     rho = 0
-          #   )}
-        }
-        if(stan_model == 5){
-          model_file = paste0(cognitive_model_directory,'BayesSME_ms_model.stan')
-          
-          # make stan model a global variable
-          my_stan_model <<- stan_model(model_file)
-          
-          n_parameters = 2
-          n_runs = 10 
-          n_parameter_columns = n_parameters * n_runs
-          
-          # my_inits <- function(){
-          #   list(
-          #     beta  = 1,
-          #     phi = 0
-          #   )}
-        }
-        
-        if(stan_model == 6){
-          model_file = paste0(cognitive_model_directory,'ms_q_learning_model_unique_bandits_heuristic.stan')
-          
-          # make stan model a global variable
-          my_stan_model <<- stan_model(model_file)
-          
-          n_parameters = 3
-          n_runs = 1#10
-          n_parameter_columns = n_parameters * n_runs
-          
-          #browser()
           
           # create bandit heuristic predictor
           uni = array(0, c(n_runs, nTrials, 4))
@@ -402,37 +348,194 @@ for (ins in c(num_instances-1)){
             uni[s,,] = get_bandit_heuristic_predictor(choice[s,])
           }
           
-
-          
           # append to data
           my_data$uni = uni
           
           # my_inits <- function(){
-          #   list(
-          #     beta  = 1,
-          #     phi = 0
-          #   )}
+          #   list()}
         }
         
-        if(stan_model == 7){
-          model_file = paste0(cognitive_model_directory,'ms_q_learning_model_trials_not_chosen_heuristic.stan')
+        if(stan_model == 4){
+          model_file = paste0(cognitive_model_directory,'ms_q_learning_model_single_lr_perseveration_trials_not_chosen_heuristic.stan')
           
           # make stan model a global variable
           my_stan_model <<- stan_model(model_file)
           
-          n_parameters = 3
-          n_runs = 1#10
+          n_parameters = 4
+          n_runs = 1 
           n_parameter_columns = n_parameters * n_runs
-          
-          #browser()
           
           # create bandit heuristic predictor
           
           trials_not_chosen = get_trials_not_chosen(pp_file = my_data)
           
+          # append to data
+          my_data$trials_not_chosen = trials_not_chosen
+          
+          # my_inits <- function(){
+          #   list()}
+        }
+        if(stan_model == 5){
+          model_file = paste0(cognitive_model_directory,'ms_q_learning_model_single_lr_unique_bandits_heuristic.stan')
+          
+          # make stan model a global variable
+          my_stan_model <<- stan_model(model_file)
+          
+          n_parameters = 3
+          n_runs = 1
+          n_parameter_columns = n_parameters * n_runs
+          
+          # create bandit heuristic predictor
+          uni = array(0, c(n_runs, nTrials, 4))
+          
+          for (s in 1:n_runs){
+            uni[s,,] = get_bandit_heuristic_predictor(choice[s,])
+          }
+          
+          # append to data
+          my_data$uni = uni
+          
+          # my_inits <- function(){
+          #   list()}
+        }
+        
+        if(stan_model == 6){
+          model_file = paste0(cognitive_model_directory,'ms_q_learning_model_single_lr_trials_not_chosen_heuristic.stan')
+          
+          # make stan model a global variable
+          my_stan_model <<- stan_model(model_file)
+          
+          n_parameters = 3
+          n_runs = 1
+          n_parameter_columns = n_parameters * n_runs
+          
+          # create bandit heuristic predictor
+          
+          trials_not_chosen = get_trials_not_chosen(pp_file = my_data)
+        
+          # append to data
+          my_data$trials_not_chosen = trials_not_chosen
+          
+          # my_inits <- function(){
+          #   list()}
+        }
+        
+        if(stan_model == 7){
+          model_file = paste0(cognitive_model_directory,'ms_q_learning_model_seperate_lr.stan')
+          
+          # make stan model a global variable
+          my_stan_model <<- stan_model(model_file)
+          
+          n_parameters = 3
+          n_runs = 1
+          n_parameter_columns = n_parameters * n_runs
+          
+          # my_inits <- function(){
+          #   list()
+        }
+        
+        if(stan_model == 8){
+          model_file = paste0(cognitive_model_directory,'ms_q_learning_model_seperate_lr_perseveration.stan')
+          
+          # make stan model a global variable
+          my_stan_model <<- stan_model(model_file)
+          
+          n_parameters = 4
+          n_runs = 1
+          n_parameter_columns = n_parameters * n_runs
+          
+          # my_inits <- function(){
+          #   list()
+        }
+        
+        if(stan_model == 9){
+          model_file = paste0(cognitive_model_directory,'ms_q_learning_model_seperate_lr_perseveration_unique_bandits_heuristic.stan')
+          
+          # make stan model a global variable
+          my_stan_model <<- stan_model(model_file)
+          
+          n_parameters = 5
+          n_runs = 1
+          n_parameter_columns = n_parameters * n_runs
+          
+          # create bandit heuristic predictor
+          uni = array(0, c(n_runs, nTrials, 4))
+          
+          for (s in 1:n_runs){
+            uni[s,,] = get_bandit_heuristic_predictor(choice[s,])
+          }
+          
+          # append to data
+          my_data$uni = uni
+          
+          # my_inits <- function(){
+          #   list()
+        }
+        
+        if(stan_model == 10){
+          model_file = paste0(cognitive_model_directory,'ms_q_learning_model_seperate_lr_perseveration_trials_not_chosen_heuristic.stan')
+          
+          # make stan model a global variable
+          my_stan_model <<- stan_model(model_file)
+          
+          n_parameters = 5
+          n_runs = 1
+          n_parameter_columns = n_parameters * n_runs
+          
+          # create bandit heuristic predictor
+          
+          trials_not_chosen = get_trials_not_chosen(pp_file = my_data)
           
           # append to data
           my_data$trials_not_chosen = trials_not_chosen
+          
+          # my_inits <- function(){
+          #   list()
+        }
+        
+        if(stan_model == 11){
+          model_file = paste0(cognitive_model_directory,'ms_q_learning_model_seperate_lr_unique_bandits_heuristic.stan')
+          
+          # make stan model a global variable
+          my_stan_model <<- stan_model(model_file)
+          
+          n_parameters = 4
+          n_runs = 1
+          n_parameter_columns = n_parameters * n_runs
+          
+          # create bandit heuristic predictor
+          uni = array(0, c(n_runs, nTrials, 4))
+          
+          for (s in 1:n_runs){
+            uni[s,,] = get_bandit_heuristic_predictor(choice[s,])
+          }
+          
+          # append to data
+          my_data$uni = uni
+          
+          # my_inits <- function(){
+          #   list()}
+        }
+        
+        if(stan_model == 12){
+          model_file = paste0(cognitive_model_directory,'ms_q_learning_model_seperate_lr_trials_not_chosen_heuristic.stan')
+          
+          # make stan model a global variable
+          my_stan_model <<- stan_model(model_file)
+          
+          n_parameters = 4
+          n_runs = 1
+          n_parameter_columns = n_parameters * n_runs
+          
+          # create bandit heuristic predictor
+          
+          trials_not_chosen = get_trials_not_chosen(pp_file = my_data)
+          
+          # append to data
+          my_data$trials_not_chosen = trials_not_chosen
+          
+          # my_inits <- function(){
+          #   list()}
         }
         
         
@@ -440,9 +543,9 @@ for (ins in c(num_instances-1)){
         # posterior sampling
         my_samples <- sampling(my_stan_model
                                , my_data
-                               , cores = 8
+                               , cores = getOption("mc.cores", 1L)
                                , chains = 1
-                               , iter = 4000)
+                               , iter = 500)
         
         # diagnostics (uncomment if needed)
         print(my_samples)

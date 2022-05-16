@@ -12,53 +12,60 @@ transformed data {
 
 parameters {
   
-  // learning rate for positive RPEs
-  real<lower=0,upper=1> alpha_pos_rpe[nSubjects];
-  
-  // learning rate for negative RPEs
-  real<lower=0,upper=1> alpha_neg_rpe[nSubjects];
-	
+  // learning rate
+  real<lower=0,upper=1> alpha[nSubjects];
+
 	// inverse temperature 
-	real beta[nSubjects];
+	real <lower=0> beta[nSubjects];
+	
+	// perseveration weight
+	  real rho[nSubjects];
 }
+
 
 model {
   
-  for (s in 1:nSubjects){  
+  rho[nSubjects] ~ normal(0,10);
   
+  for (s in 1:nSubjects){
+    
     vector[4] v[nTrials+1]; // value
     real pe[nSubjects, nTrials];       // prediction error
-    
-  	v[1] = initV;
-  	
-  	for (t in 1:nTrials){
-  	  
+    vector[4] pb;  // perseveration bonus
+  
+	  v[1] = initV;
+	
+	  for (t in 1:nTrials){
+	    
+	    // rho: perseveration bonus
+      pb = rep_vector(0.0, 4);
+      
+      if (t>1) {
+        if (choice[s, t-1] != 0) {
+          pb[choice[s, t-1]] = rho[s];
+        } 
+      }
+	    
   	  // choice 
-  		choice[s, t] ~ categorical_logit(beta[s] * v[t]);
+  		choice[s, t] ~ categorical_logit(beta[s] * (v[t] + pb));
   		 	
   		// prediction error
   		pe[s, t] = reward[s, t] - v[t,choice[s, t]];
   		
   	  // value updating (learning) 
       v[t+1] = v[t]; 
-      
-      if (pe[s, t] >= 0){
-        v[t+1, choice[s, t]] = v[t, choice[s, t]] + alpha_pos_rpe[s] * pe[s, t];
-      }
-      
-      else{
-        v[t+1, choice[s, t]] = v[t, choice[s, t]] + alpha_neg_rpe[s] * pe[s, t];
-      }
-      
-  	}
+      v[t+1, choice[s, t]] = v[t, choice[s, t]] + alpha[s] * pe[s, t];
+	}
 }
 }
+  
 
 generated quantities {
   real log_lik[nSubjects, nTrials];
   int predicted_choices[nSubjects, nTrials];
   vector[4] v[nTrials+1]; // value
   real pe[nSubjects, nTrials];       // prediction error
+  vector[4] pb;  // perseveration bonus
 
 	for (s in 1:nSubjects){
 	  
@@ -66,23 +73,27 @@ generated quantities {
 
   	for (t in 1:nTrials){
   	  
+  	  // rho: perseveration bonus
+      pb = rep_vector(0.0, 4);
+      
+      if (t>1) {
+        if (choice[s, t-1] != 0) {
+          pb[choice[s, t-1]] = rho[s];
+        } 
+      }
+  	  
   	  // choice 
-  		log_lik[s, t] = categorical_logit_lpmf(choice[s, t] | beta[s] * v[t]);
-  		predicted_choices[s, t] = categorical_logit_rng(beta[s] * v[t]);
+  		log_lik[s, t] = categorical_logit_lpmf(choice[s, t] | beta[s] * (v[t] + pb));
+  		predicted_choices[s, t] = categorical_logit_rng(beta[s] * (v[t] + pb));
   		 	
   		// prediction error
   		pe[s, t] = reward[s, t] - v[t,choice[s, t]];
   		
   	  // value updating (learning) 
       v[t+1] = v[t]; 
+      v[t+1, choice[s, t]] = v[t, choice[s, t]] + alpha[s] * pe[s, t];
       
-      if (pe[s, t] >= 0){
-        v[t+1, choice[s, t]] = v[t, choice[s, t]] + alpha_pos_rpe[s] * pe[s, t];
-      }
-      
-      else{
-        v[t+1, choice[s, t]] = v[t, choice[s, t]] + alpha_neg_rpe[s] * pe[s, t];
-      }
   	}
   }
 }
+

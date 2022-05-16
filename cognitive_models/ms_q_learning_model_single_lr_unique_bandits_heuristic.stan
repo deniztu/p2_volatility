@@ -82,37 +82,37 @@ model {
 }
 }
 
-// generated quantities {
-//   real log_lik[nSubjects, nTrials];
-//   int predicted_choices[nSubjects, nTrials];
-//   vector[4] v[nTrials+1]; // value
-//   real pe[nSubjects, nTrials];       // prediction error
-//   vector[4] eb;  // exploration bonus
-// 
-// 	for (s in 1:nSubjects){
-// 	  
-//   	v[1] = initV;
-//   	eb = rep_vector(0, 4);
-// 
-//   	for (t in 1:nTrials){
-//   	  
-//   	  if (t>1) {
-//   	    for(i in 1:4){
-// 	        eb[i] = phi[s] * uni[s,t-1,i];
-// 	        }
-// 	       }
-//   	  
-//   	  // choice 
-//   		log_lik[s, t] = categorical_logit_lpmf(choice[s, t] | beta[s] * (v[t] + eb));
-//   		predicted_choices[s, t] = categorical_logit_rng(beta[s] * (v[t] + eb));
-//   		 	
-//   		// prediction error
-//   		pe[s, t] = reward[s, t] - v[t,choice[s, t]];
-//   		
-//   	  // value updating (learning) 
-//       v[t+1] = v[t]; 
-//       v[t+1, choice[s, t]] = v[t, choice[s, t]] + alpha[s] * pe[s, t];
-//       
-//   	}
-//   }
-// }
+generated quantities {
+  real log_lik[nSubjects, nTrials];
+  int predicted_choices[nSubjects, nTrials];
+  vector[4] v[nTrials+1]; // value
+  real pe[nSubjects, nTrials];       // prediction error
+  vector[4] eb;  // exploration bonus
+
+	for (s in 1:nSubjects){
+
+  	v[1] = initV;
+  	eb = rep_vector(0, 4);
+
+  	for (t in 1:nTrials){
+
+  	  if (t>1) {
+  	    for(i in 1:4){
+	        eb[i] = phi[s] * uni[s,t-1,i];
+	        }
+	       }
+
+  	  // choice
+  		log_lik[s, t] = categorical_logit_lpmf(choice[s, t] | beta[s] * (v[t] + eb));
+  		predicted_choices[s, t] = categorical_logit_rng(beta[s] * (v[t] + eb));
+
+  		// prediction error
+  		pe[s, t] = reward[s, t] - v[t,choice[s, t]];
+
+  	  // value updating (learning)
+      v[t+1] = v[t];
+      v[t+1, choice[s, t]] = v[t, choice[s, t]] + alpha[s] * pe[s, t];
+
+  	}
+  }
+}

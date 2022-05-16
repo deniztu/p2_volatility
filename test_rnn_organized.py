@@ -37,7 +37,7 @@ for id_ in range(1,20):
                             , rnn_type = 'lstm'
                             , learning_algorithm = 'a2c'
                             , n_iterations = 50000
-                            , model_id= id_)
+                            , model_id= 0)
         
         # train the rnn
         #nnet.train()

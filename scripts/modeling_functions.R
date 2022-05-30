@@ -260,6 +260,12 @@ get_trials_not_chosen <- function(pp_file = res){
 # 10: ms_q_learning_model_seperate_lr_perseveration_trials_not_chosen_heuristic.stan
 # 11: ms_q_learning_model_seperate_lr_unique_bandits_heuristic.stan
 # 12: ms_q_learning_model_seperate_lr_trials_not_chosen_heuristic.stan
+# 13: ms_kalman_model.stan
+# 14: ms_kalman_model_p.stan
+# 15: ms_kalman_model_up.stan
+# 16: ms_kalman_model_tp.stan
+# 17: ms_kalman_model_u.stan
+# 18: ms_kalman_model_t.stan
 
 
 fit_model_to_rnn_data <- function(stan_models # vector of integers according to stan_model legend
@@ -538,14 +544,148 @@ for (ins in c(num_instances-1)){
           #   list()}
         }
         
+        if(stan_model == 13){
+          model_file = paste0(cognitive_model_directory,'ms_kalman_model.stan')
+          
+          # make stan model a global variable
+          my_stan_model <<- stan_model(model_file)
+          
+          n_parameters = 1
+          n_runs = 1
+          n_parameter_columns = n_parameters * n_runs
+          
+          # rescale reward
+          my_data$reward = my_data$reward*100
+          
+          # my_inits <- function(){
+          #   list()}
+        }
         
+        if(stan_model == 14){
+          model_file = paste0(cognitive_model_directory,'ms_kalman_model_p.stan')
+          
+          # make stan model a global variable
+          my_stan_model <<- stan_model(model_file)
+          
+          n_parameters = 2
+          n_runs = 1
+          n_parameter_columns = n_parameters * n_runs
+          
+          # rescale reward
+          my_data$reward = my_data$reward*100
+          
+          # my_inits <- function(){
+          #   list()}
+        }
+        
+        if(stan_model == 15){
+          model_file = paste0(cognitive_model_directory,'ms_kalman_model_up.stan')
+          
+          # make stan model a global variable
+          my_stan_model <<- stan_model(model_file)
+          
+          n_parameters = 3
+          n_runs = 1
+          n_parameter_columns = n_parameters * n_runs
+          
+          # rescale reward
+          my_data$reward = my_data$reward*100
+          
+          # create bandit heuristic predictor
+          uni = array(0, c(n_runs, nTrials, 4))
+          
+          for (s in 1:n_runs){
+            uni[s,,] = get_bandit_heuristic_predictor(choice[s,])
+          }
+          
+          # append to data
+          my_data$uni = uni
+          
+          # my_inits <- function(){
+          #   list()}
+        }
+        
+        if(stan_model == 16){
+          model_file = paste0(cognitive_model_directory,'ms_kalman_model_tp.stan')
+          
+          # make stan model a global variable
+          my_stan_model <<- stan_model(model_file)
+          
+          n_parameters = 3
+          n_runs = 1
+          n_parameter_columns = n_parameters * n_runs
+          
+          # rescale reward
+          my_data$reward = my_data$reward*100
+          
+          # create bandit heuristic predictor
+          
+          trials_not_chosen = get_trials_not_chosen(pp_file = my_data)
+          
+          # append to data
+          my_data$trials_not_chosen = trials_not_chosen
+          
+          # my_inits <- function(){
+          #   list()}
+        }
+        
+        if(stan_model == 17){
+          model_file = paste0(cognitive_model_directory,'ms_kalman_model_u.stan')
+          
+          # make stan model a global variable
+          my_stan_model <<- stan_model(model_file)
+          
+          n_parameters = 2
+          n_runs = 1
+          n_parameter_columns = n_parameters * n_runs
+          
+          # rescale reward
+          my_data$reward = my_data$reward*100
+          
+          # create bandit heuristic predictor
+          uni = array(0, c(n_runs, nTrials, 4))
+          
+          for (s in 1:n_runs){
+            uni[s,,] = get_bandit_heuristic_predictor(choice[s,])
+          }
+          
+          # append to data
+          my_data$uni = uni
+          
+          # my_inits <- function(){
+          #   list()}
+        }
+        
+        if(stan_model == 18){
+          model_file = paste0(cognitive_model_directory,'ms_kalman_model_t.stan')
+          
+          # make stan model a global variable
+          my_stan_model <<- stan_model(model_file)
+          
+          n_parameters = 2
+          n_runs = 1
+          n_parameter_columns = n_parameters * n_runs
+          
+          # rescale reward
+          my_data$reward = my_data$reward*100
+          
+          # create bandit heuristic predictor
+          
+          trials_not_chosen = get_trials_not_chosen(pp_file = my_data)
+          
+          # append to data
+          my_data$trials_not_chosen = trials_not_chosen
+          
+          # my_inits <- function(){
+          #   list()}
+        }
         
         # posterior sampling
         my_samples <- sampling(my_stan_model
                                , my_data
                                , cores = getOption("mc.cores", 1L)
                                , chains = 1
-                               , iter = 500)
+                               , iter = 1000)
         
         # diagnostics (uncomment if needed)
         print(my_samples)
@@ -569,6 +709,7 @@ for (ins in c(num_instances-1)){
         # save only parameter columns as .feather (otherwise slow)
         df <- as.data.frame(stanfit$stanfit)
         df <- df[, 1:n_parameter_columns]
+        df <- as.data.frame(df)
         write_feather(df, sprintf('%s/%s.feather', path_to_save_results, result_name))
         
         # delete my_samples

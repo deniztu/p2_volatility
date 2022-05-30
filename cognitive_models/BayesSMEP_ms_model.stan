@@ -13,12 +13,12 @@ transformed data {
   real<lower=0,upper=1> decay;
   real<lower=0, upper=100> decay_center;
   
-  v1 = 0.5; //changed
-  sig1 = 4.0;
-  sigO = 4.0;
-  sigD = 2.8;
+  v1 = 50;
+  sig1 = 4;
+  sigO = 4;
+  sigD =  2.8;
   decay = 0.9836;
-  decay_center = 0.5;//changed
+  decay_center = 50;
 }
 
 parameters {

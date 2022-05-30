@@ -288,9 +288,6 @@ class Worker():
        
         if self.rnn_type == 'lstm' and self.learning_algorithm == 'a2c':
             
-            print('shit!')
-            print(self.entropy_loss_weight)
-            
             rnn_state = self.ac_network.state_init ###change
             
             

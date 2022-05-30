@@ -49,7 +49,7 @@ fit_model_to_rnn_data(stan_models = c(2), preprocessed_file_name = 'pp_data_lstm
 
 #debugonce(fit_model_to_rnn_data)
 
-for (m in c(12)){
+for (m in c(14:18)){
   
   for (i in c(0:19)){
     

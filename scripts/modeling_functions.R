@@ -266,6 +266,8 @@ get_trials_not_chosen <- function(pp_file = res){
 # 16: ms_kalman_model_tp.stan
 # 17: ms_kalman_model_u.stan
 # 18: ms_kalman_model_t.stan
+# 19: ms_q_learning_model_single_lr_perseveration_decay.stan
+# 20: ms_q_learning_model_single_lr_perseveration_decay_trials_not_chosen_heuristic.stan
 
 
 fit_model_to_rnn_data <- function(stan_models # vector of integers according to stan_model legend
@@ -316,7 +318,7 @@ for (ins in c(num_instances-1)){
           my_stan_model <<- stan_model(model_file)
           
           n_parameters = 3
-          n_runs = 1 
+          n_runs = nSubjects 
           n_parameter_columns = n_parameters * n_runs
           
           # my_inits <- function(){
@@ -668,6 +670,40 @@ for (ins in c(num_instances-1)){
           
           # rescale reward
           my_data$reward = my_data$reward*100
+          
+          # create bandit heuristic predictor
+          
+          trials_not_chosen = get_trials_not_chosen(pp_file = my_data)
+          
+          # append to data
+          my_data$trials_not_chosen = trials_not_chosen
+          
+          # my_inits <- function(){
+          #   list()}
+        }
+        
+        if(stan_model == 19){
+          model_file = paste0(cognitive_model_directory,'ms_q_learning_model_single_lr_perseveration_decay.stan')
+          
+          # make stan model a global variable
+          my_stan_model <<- stan_model(model_file)
+          
+          n_parameters = 3
+          n_runs = 1
+          n_parameter_columns = n_parameters * n_runs
+          
+          # my_inits <- function(){
+          #   list()}
+        }
+        if(stan_model == 20){
+          model_file = paste0(cognitive_model_directory,'ms_q_learning_model_single_lr_perseveration_trials_not_chosen_heuristic.stan')
+          
+          # make stan model a global variable
+          my_stan_model <<- stan_model(model_file)
+          
+          n_parameters = 5
+          n_runs = 1 
+          n_parameter_columns = n_parameters * n_runs
           
           # create bandit heuristic predictor
           

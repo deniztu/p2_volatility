@@ -293,7 +293,7 @@ class Worker():
             
             if self.entropy_loss_weight == 'linear':
                 
-                print(entr_)
+                # print(entr_)
                 
                 feed_dict = {self.ac_network.target_v:discounted_rewards,
                              self.ac_network.prev_rewardsch:np.vstack(prev_rewards_ch),

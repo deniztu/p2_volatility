@@ -31,17 +31,36 @@ model {
 	
 	  for (t in 1:nTrials){
 	    
+	    if (choice[s,t] != 0) {
+	      
+	      // print("s");
+	      // print(s);
+	      // print("t");
+	      // print(t);
+	      // print(beta[s]);
+	      // print(alpha[s]);
+	      // print(v[t]);
+	      // print(choice[s, t]);
+	      // print(reward[s,t]);
+	    
   	  // choice 
   		choice[s, t] ~ categorical_logit(beta[s] * v[t]);
   		 	
   		// prediction error
   		pe[s, t] = reward[s, t] - v[t,choice[s, t]];
   		
+	    }
+  		
   	  // value updating (learning) 
-      v[t+1] = v[t]; 
+      v[t+1] = v[t];
+      
+      if (choice[s,t] != 0) {
+      
       v[t+1, choice[s, t]] = v[t, choice[s, t]] + alpha[s] * pe[s, t];
-	}
-}
+      
+      }
+	  }
+  }
 }
   
 
@@ -57,6 +76,8 @@ generated quantities {
 
   	for (t in 1:nTrials){
   	  
+  	  if (choice[s,t] != 0) {
+  	  
   	  // choice 
   		log_lik[s, t] = categorical_logit_lpmf(choice[s, t] | beta[s] * v[t]);
   		predicted_choices[s, t] = categorical_logit_rng(beta[s] * v[t]);
@@ -67,7 +88,8 @@ generated quantities {
   	  // value updating (learning) 
       v[t+1] = v[t]; 
       v[t+1, choice[s, t]] = v[t, choice[s, t]] + alpha[s] * pe[s, t];
-      
+  	  
+  	  }
   	}
   }
 }

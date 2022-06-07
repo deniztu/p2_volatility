@@ -76,16 +76,16 @@ for (m in c(1:18)){
 # fit human data       #
 ########################
 
-for (m in c(1)){
+for (m in c(20)){
     
-      file = 'pp_data_wiehler_control_human_bandit_data.RData'
+      file = 'pp_data_chakroun_placebo_human_bandit_data.RData'
       
       load(sprintf('data/intermediate_data/modeling/preprocessed_data_for_modeling/%s', file))
       
       # nRuns = num_instances
-      nRuns = res$nRuns
+      nRuns = 10#res$nRuns
       
-      # debugonce(fit_model_to_rnn_data)
+      debugonce(fit_model_to_rnn_data)
       
       
       fit_model_to_rnn_data(stan_models = c(m), preprocessed_file_name = file,

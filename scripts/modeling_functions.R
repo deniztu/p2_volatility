@@ -207,8 +207,8 @@ get_trials_not_chosen <- function(pp_file = res){
   choices<-pp_file$choice
   trials_not_chosen<-array(0,c(NS,NT,4))
   for (s in 1:NS) {
-    for (t in 1:NT[s]) {
-      if (choices!=0){
+    for (t in 1:NT) {
+      if (choices[s,t]!=0){
         trials_not_chosen[s,t,1]<-ifelse(choices[s,t]==1, 0, t)
         if (trials_not_chosen[s,t,1]!=0 & max(which(trials_not_chosen[s,1:t,1]==0))>-Inf){
           trials_not_chosen[s,t,1]<-(t-max(which(trials_not_chosen[s,1:t,1]==0)))
@@ -696,17 +696,16 @@ for (ins in c(num_instances-1)){
           #   list()}
         }
         if(stan_model == 20){
-          model_file = paste0(cognitive_model_directory,'ms_q_learning_model_single_lr_perseveration_trials_not_chosen_heuristic.stan')
+          model_file = paste0(cognitive_model_directory,'ms_q_learning_model_single_lr_perseveration_decay_trials_not_chosen_heuristic.stan')
           
           # make stan model a global variable
           my_stan_model <<- stan_model(model_file)
           
           n_parameters = 5
-          n_runs = 1 
+          n_runs = my_data$nSubjects
           n_parameter_columns = n_parameters * n_runs
           
           # create bandit heuristic predictor
-          
           trials_not_chosen = get_trials_not_chosen(pp_file = my_data)
           
           # append to data
@@ -721,7 +720,7 @@ for (ins in c(num_instances-1)){
                                , my_data
                                , cores = getOption("mc.cores", 1L)
                                , chains = 1
-                               , iter = 1000)
+                               , iter = 500)
         
         # diagnostics (uncomment if needed)
         print(my_samples)

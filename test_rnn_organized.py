@@ -19,7 +19,7 @@ daw_walks = ['classes/bandits/Daw2006_payoffs1.csv',
              'classes/bandits/Daw2006_payoffs2.csv',
              'classes/bandits/Daw2006_payoffs3.csv']
 
-for id_ in range(2,20):    
+for id_ in range(4,20):    
 
         train_mab = bc.bandit(bandit_type = 'restless'
                             , arms = 4

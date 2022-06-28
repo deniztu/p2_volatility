@@ -24,7 +24,6 @@ preprocess_rnn_data_for_modeling(rnn_type = 'lstm_a2c'
                                  , path_to_save_formatted_data = 'data/intermediate_data/modeling/preprocessed_data_for_modeling'
                                  , reward_type = '')
 
-'lstm_a2c_nh_96_lr_0_0001_n_n_p_0_ew_0_05_vw_0_5_dr_0_5_res_d_f_p_0_1_rt_con_a_4_n_300_te_50000_id_1_test_b_daw_p_1'
 
 ################################
 # Model Preprocessed Data      #
@@ -52,21 +51,18 @@ fit_model_to_rnn_data(stan_models = c(2), preprocessed_file_name = 'pp_data_lstm
 
 #debugonce(fit_model_to_rnn_data)
 
-for (m in c(1:18)){
+for (m in c(9)){
   
-  for (i in c(0:19)){
+  for (i in c(1:19)){
     
     for (w in c(1:3)){
       
-      m = 20
-      w = 2
-      i = 1
-      
       file = sprintf('pp_data_lstm_a2c_nh_48_lr_0_0001_n_n_p_0_ew_lin_vw_0_5_dr_0_5_res_d_f_p_0_1_rt_con_a_4_n_300_te_50000_id_%s_test_b_daw_p_%s.RData', i,w)
-      
+    
       fit_model_to_rnn_data(stan_models = c(m), preprocessed_file_name = file,
                             num_instances = 1, 
-                            sd_range = c(1))
+                            sd_range = c(1),
+                            subject_ids = 1)
     }
     
   }
@@ -76,21 +72,21 @@ for (m in c(1:18)){
 # fit human data       #
 ########################
 
-for (m in c(20)){
-    
-      file = 'pp_data_chakroun_placebo_human_bandit_data.RData'
-      
-      load(sprintf('data/intermediate_data/modeling/preprocessed_data_for_modeling/%s', file))
-      
-      # nRuns = num_instances
-      nRuns = 10#res$nRuns
-      
-      debugonce(fit_model_to_rnn_data)
-      
-      
+file = 'pp_data_chakroun_placebo_human_bandit_data.RData'
+
+load(sprintf('data/intermediate_data/modeling/preprocessed_data_for_modeling/%s', file))
+
+# nRuns = num_instances
+subject_ids = c(1:res$nRuns)
+
+for (m in c(8:9)){
+  
+      # debugonce(fit_model_to_rnn_data)
+
       fit_model_to_rnn_data(stan_models = c(m), preprocessed_file_name = file,
-                            num_instances = nRuns, 
-                            sd_range = c(1))
+                            num_instances = 1, 
+                            sd_range = c(1),
+                            subject_ids = subject_ids)
 }
 
 

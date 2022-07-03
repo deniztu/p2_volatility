@@ -146,18 +146,18 @@ class AC_Network():
             lstm_outputs, lstm_state = tf.nn.dynamic_rnn(lstm_cell, rnn_in, initial_state=state_in, sequence_length=step_size,time_major=False)
             lstm_c, lstm_h = lstm_state
             
-            print('shapes of ht and ct')
+            #print('shapes of ht and ct')
             # print(np.shape(lstm_h))
             # print(np.shape(lstm_c))
             
-            print('sliced c')
+            #print('sliced c')
             # print(np.shape(lstm_c[:1, :]))
             
             # added noise, does it work?
             self.h_noise    = tf.placeholder(tf.float32, [None, nb_units])   
             
             self.state_out = (lstm_c[:1, :], lstm_h[:1, :])
-            print('lstm state out')
+            #print('lstm state out')
             # print(np.shape(self.state_out))
             # print(np.shape(self.state_out[0]))
             # print(np.shape(self.state_out[1]))
@@ -165,80 +165,51 @@ class AC_Network():
             self.true_state_out = lstm_h[:1, :]
             rnn_out = tf.reshape(lstm_outputs, [-1, nb_units])
             
-            print('lstm rnn_out (lstm_outputs) before reshape')
+            #print('lstm rnn_out (lstm_outputs) before reshape')
             # print(np.shape(lstm_outputs))
             
-            print('lstm rnn_out')
+            #print('lstm rnn_out')
             # print(np.shape(rnn_out))
             
-        if rnn_type == 'lstm2' and noise == 'none':
-            # raise  ValueError('Noisy LSTM not implemented yet!')
+        if rnn_type == 'lstm2' and noise == 'update-dependant':
+            
+            add_noise = True
             
             # IMPLEMENT SCAN HERE
             lstm_cell_b = tf.contrib.rnn.BasicLSTMCell(nb_units,state_is_tuple=True) #hacky
 
-            lstm_cell = own_lstm_cell.LSTM(n_arms+1, nb_units)
+            lstm_cell = own_lstm_cell.LSTM(n_arms+1, nb_units, add_noise)
             c_init = np.zeros((1, nb_units), np.float32)
             h_init = np.zeros((1, nb_units), np.float32)
             self.state_init = [h_init, c_init]
             c_in = tf.placeholder(tf.float32, [1, nb_units])
             h_in = tf.placeholder(tf.float32, [1, nb_units])
             self.state_in = tf.tuple([h_in, c_in])
-            # print('self.state_in shape A')
-            # print(np.shape(self.state_in))
             
-            
-            #rnn_in = tf.expand_dims(input_, [0]) ##unsure about this
-            # added for [?, 1, narms + 2 as findling]
-            rnn_in = tf.transpose(tf.expand_dims(input_, [0]),[1,0,2])
-            
-            # print('input_ shape')
-            # print(np.shape(input_))
-            
-            
-            # print('rnn_in shape')
-            # print(np.shape(rnn_in))
-            
-            #step_size = tf.shape(self.prev_rewardsch)[:1]
-            #state_in = tf.contrib.rnn.LSTMStateTuple(h_in, c_in)
-            
-            # added noise, does it work?
             self.h_noise    = tf.placeholder(tf.float32, [None, nb_units]) 
+            all_noises      = self.h_noise
             
+            print('all_noises')
+            print(np.shape(all_noises))
+            
+            all_inputs = tf.concat((input_, all_noises), axis = 1) 
+            rnn_in = tf.transpose(tf.expand_dims(all_inputs, [0]), [1,0,2])
+            
+            print('rnn_om')
+            print(np.shape(rnn_in))
+            
+            
+            # states, self.added_noises_means = tf.scan(lstm_cell.step, rnn_in, initializer=(self.state_in))
             states = tf.scan(lstm_cell.step, rnn_in, initializer=(self.state_in))
+
+            print('DROGBA')
             
             lstm_h, lstm_c = states
-            
-            # print('shapes of ht and ct')
-            # print(np.shape(lstm_h))
-            # print(np.shape(lstm_c))
-            
-            # print('shape of tf.tuple([ht, ct])')
-            # print(np.shape(states))
-            
-            # lstm_h         = lstm_outputs[:,0]
-            # self.state_out = (lstm_h[:1, :], lstm_c[:1, :]) 
 
             self.state_out = (lstm_h[0,:, :], lstm_c[0,:, :]) # Deniz: changed to get [1, n_hidden] vs [?, 1, n_hidden] which throws error in recursion in work
-            # print('lstm2 state out')
-            # print(np.shape(self.state_out))
-            # print(np.shape(self.state_out[0]))
-            # print(np.shape(self.state_out[1]))
             
             self.true_state_out = lstm_h[:1, :]
             rnn_out        = tf.reshape(lstm_h, [-1, nb_units])
-            
-            # print('shape rnn_out')
-            # print(np.shape(rnn_out))
-            
-            # print('lstm2 lstm_h')
-            # print(np.shape(rnn_out))
-            
-            # print('lstm rnn_out')
-            # print(np.shape(rnn_out))
-
-            
-            
         
         if rnn_type == 'rnn': 
     
@@ -574,10 +545,11 @@ class Worker():
                 
                 if self.noise == 'update-dependant':
                     
-                    if self.rnn_type == 'lstm':
-                        raise  ValueError('Noisy lstm not implemented yet!')
+                    if self.rnn_type == 'lstm2':
+                        h_noise = np.array(np.random.normal(size=rnn_state[0].shape) * self.noise_parameter, dtype=np.float32)                    
                     
-                    h_noise = np.array(np.random.normal(size=rnn_state.shape) * self.noise_parameter, dtype=np.float32)                    
+                    else: 
+                        h_noise = np.array(np.random.normal(size=rnn_state.shape) * self.noise_parameter, dtype=np.float32)                    
                     
                 if self.noise == 'constant':
                     raise  ValueError('Constant noise not implemented yet!')
@@ -592,16 +564,6 @@ class Worker():
                     
                     if self.entropy_loss_weight == 'linear':
                         
-                        # print('A')
-                        # print(np.shape(rnn_state))
-                
-                        # print('B')
-                        # print(np.shape(rnn_state[0]))
-                        
-                        # print('C')
-                        # print(np.shape(rnn_state[1]))
-                
-                        
                         feed_dict = {self.ac_network.prev_rewardsch:[[rch]],
                                      self.ac_network.prev_actions:[a],
                                      self.ac_network.timestep:[[t]],
@@ -614,29 +576,6 @@ class Worker():
                     
                     if self.entropy_loss_weight == 'linear':
                         
-                        # print('episode count')
-                        # print(episode_count)
-                        
-                        # print('t')
-                        # print(t)
-                        
-                        # print('A')
-                        # print(np.shape(rnn_state))
-                        # print(np.shape(np.reshape(rnn_state, [-1, 1, self.n_hidden_neurons])))
-                        # added
-                        # print('Before')
-                        # print(np.shape(rnn_state))
-                        
-                        #rnn_state = np.reshape(rnn_state, [-1, 1, self.n_hidden_neurons])
-                        
-                        # print('After')
-                        # print(np.shape(rnn_state))
-                        # print('B')
-                        # print(np.shape(rnn_state[0]))
-                        
-                        # print('C')
-                        # print(np.shape(rnn_state[1]))
-                
                         feed_dict = {self.ac_network.prev_rewardsch:[[rch]],
                                      self.ac_network.prev_actions:[a],
                                      self.ac_network.timestep:[[t]],
@@ -647,9 +586,6 @@ class Worker():
                         
                     else:
                         
-                                                # added
-                        #rnn_state = np.reshape(rnn_state, [-1, 1, self.n_hidden_neurons])
-                        
                         feed_dict = {self.ac_network.prev_rewardsch:[[rch]],
                                      self.ac_network.prev_actions:[a],
                                      self.ac_network.timestep:[[t]],
@@ -659,9 +595,6 @@ class Worker():
                         
                 
                 if self.rnn_type == 'rnn':
-                    
-                    # print('!!!')
-                    # print(entr_)
                     
                     feed_dict = {self.ac_network.prev_rewardsch:[[rch]],
                                  self.ac_network.prev_actions:[a],
@@ -682,9 +615,10 @@ class Worker():
                     
                     # print('AAA')
                     
-                    a_dist,rnn_state_new, rnn_true_state_new = sess.run([self.ac_network.policy,
+                    a_dist,rnn_state_new, rnn_true_state_new, added_noise = sess.run([self.ac_network.policy,
                                                                              self.ac_network.state_out,
-                                                                             self.ac_network.true_state_out], # removed added_noises_means, states_means 
+                                                                             self.ac_network.true_state_out,
+                                                                             self.ac_network.added_noises_means], # removed added_noises_means, states_means 
                                                                              feed_dict=feed_dict)
 
                     # value = 0
@@ -718,7 +652,7 @@ class Worker():
                 episode_step_count += 1 
 
                 # state_mean_arr.append(state_mean)
-                # added_noise_arr.append(added_noise)
+                #added_noise_arr.append(added_noise)
                 episode_buffer.append([a,rch,t, h_noise, v[0,0], d])
                 
                 # if network is tested collect vaiables
@@ -734,7 +668,7 @@ class Worker():
                 if not d:
                     self.env.update()        
             
-            # self.addnoises_mean_values.append(np.mean(added_noise_arr))
+            #self.addnoises_mean_values.append(np.mean(added_noise_arr))
             # self.hidden_mean_values.append(np.mean(state_mean_arr))
             self.episode_rewards.append(episode_reward)
             self.episode_lengths.append(episode_step_count)
@@ -778,15 +712,13 @@ class Worker():
                         return None
 
                 mean_reward    = np.mean(self.episode_rewards[-50:])
-                # print('mean_reward')
-                # print(mean_reward)
-                # mean_noiseadd  = np.mean(self.addnoises_mean_values[-50:])
+                mean_noiseadd  = np.mean(self.addnoises_mean_values[-50:])
                 mean_hidden    = np.mean(self.hidden_mean_values[-50:])
                 # mean_reversal  = np.mean(self.episode_reward_reversal[-1])
                 summary = tf.Summary()
                 summary.value.add(tag='Perf/Reward', simple_value=float(mean_reward))
                 # summary.value.add(tag='Perf/reversal_Reward', simple_value=float(mean_reversal))
-                # summary.value.add(tag='Info/Noise_added', simple_value=float(mean_noiseadd))
+                summary.value.add(tag='Info/Noise_added', simple_value=float(mean_noiseadd))
                 summary.value.add(tag='Info/Hidden_activity', simple_value=float(mean_hidden))
                 # summary.value.add(tag='Parameters/biases_transition', simple_value=np.abs(sess.run(tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)[3])).mean())
                 summary.value.add(tag='Parameters/matrix_transition', simple_value=np.abs(sess.run(tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)[1])).mean())                

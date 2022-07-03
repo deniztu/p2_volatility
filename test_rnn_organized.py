@@ -7,7 +7,7 @@ Created on Thu Mar  3 11:29:28 2022
 
 from classes.bandits import fixed_bandit_class as fbc
 from classes.bandits import bandit_class as bc
-from classes.neural_networks import network_class_organized as nn
+from classes.neural_networks import network_class_organized_lstm_cell as nn
 from matplotlib import pyplot as plt
 import tensorflow as tf
 import numpy as np
@@ -21,22 +21,23 @@ daw_walks = ['classes/bandits/Daw2006_payoffs1.csv',
 
 for id_ in range(4,20):    
 
-        train_mab = bc.bandit(bandit_type = 'restless'
-                            , arms = 4
-                            , num_steps = 300
-                            , reward_type = 'continuous'
-                            , noise_sd = 0.1
-                            , dependant = False)
+        train_mab = bc.bandit(bandit_type = 'stationary'
+                            , arms = 2
+                            , num_steps = 50
+                            , reward_type = 'binary'
+                            , reward_rate = 0.9
+                            , dependant = True)
         
         nnet = nn.neural_network(bandit = train_mab
-                            , noise = 'none'
+                            , noise = 'update-dependant'
                             , value_loss_weight= 0.5
-                            , entropy_loss_weight = 'linear'
-                            , rnn_type = 'lstm'
+                            , entropy_loss_weight = 0
+                            , rnn_type = 'lstm2'
+                            , noise_parameter = 0.5 
                             , learning_algorithm = 'a2c'
-                            , n_iterations = 50000
-                            , model_id= id_
-                            , n_hidden_neurons = 96)
+                            , n_iterations = 20000
+                            , model_id= 999
+                            , n_hidden_neurons = 48)
         
         # train the rnn
         nnet.train()

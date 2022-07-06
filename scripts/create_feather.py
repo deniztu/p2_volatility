@@ -10,7 +10,9 @@ import numpy as np
 from helpers import feather_class
 from helpers import dot2_
 
-feather_cl = feather_class(feather_file_name = '{}_nh_48_lr_0_0001_n_n_p_0_ew_lin_vw_0_5_dr_0_5_res_d_f_p_{}_rt_con_a_4_n_300_te_50000_id_{}_test_b_daw_p_{}')
+feather_cl = feather_class(feather_file_name = '{}_nh_48_lr_0_0001_n_u_p_0_5_ew_0_vw_0_5_dr_0_5_res_d_f_p_{}_rt_con_a_4_n_300_te_50000_id_{}_test_b_daw_p_{}')
+
+
 
 #feather_file_name = 'all_{}_{}_test_runs_train_sd_.1_id_9_test_sd_0_32'
 
@@ -21,7 +23,7 @@ RINS = 0
 # TEST_SDS = np.arange(.02, .34, .02)
 TEST_SDS = [1, 2, 3]
 REWARD_TYPE = ''
-RNN_TYPE = 'lstm_a2c'
+RNN_TYPE = 'lstm2_a2c'
 IS_NOISE = False
 
 

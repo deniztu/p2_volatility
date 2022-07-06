@@ -189,27 +189,44 @@ class AC_Network():
             self.h_noise    = tf.placeholder(tf.float32, [None, nb_units]) 
             all_noises      = self.h_noise
             
-            print('all_noises')
-            print(np.shape(all_noises))
+            # print('all_noises')
+            # print(np.shape(all_noises))
             
             all_inputs = tf.concat((input_, all_noises), axis = 1) 
             rnn_in = tf.transpose(tf.expand_dims(all_inputs, [0]), [1,0,2])
             
-            print('rnn_om')
-            print(np.shape(rnn_in))
+            # print('rnn_in')
+            # print(np.shape(rnn_in))
             
             
             # states, self.added_noises_means = tf.scan(lstm_cell.step, rnn_in, initializer=(self.state_in))
             states = tf.scan(lstm_cell.step, rnn_in, initializer=(self.state_in))
-
-            print('DROGBA')
             
             lstm_h, lstm_c = states
+            
+            # print('lstm_h')
+            # print(np.shape(lstm_h))
+            
+            # print('lstm_c')
+            # print(np.shape(lstm_c))
 
             self.state_out = (lstm_h[0,:, :], lstm_c[0,:, :]) # Deniz: changed to get [1, n_hidden] vs [?, 1, n_hidden] which throws error in recursion in work
             
+            # print('state_out')
+            # print(np.shape(self.state_out))
+            # print('state_out lstm_h')
+            # print(np.shape(self.state_out[0]))
+            # print('state_out lstm_c')
+            # print(np.shape(self.state_out[1]))
+            
             self.true_state_out = lstm_h[:1, :]
+            # print('true state_out')
+            # print(np.shape(self.true_state_out))
+            
             rnn_out        = tf.reshape(lstm_h, [-1, nb_units])
+            
+            # print('rnn_out')
+            # print(np.shape(rnn_out))
         
         if rnn_type == 'rnn': 
     
@@ -259,7 +276,10 @@ class AC_Network():
         # Loss functions
         
         self.policy = slim.fully_connected(rnn_out, n_arms, activation_fn=tf.nn.softmax,
-            weights_initializer=normalized_columns_initializer(0.01), biases_initializer=None)   #changed      
+            weights_initializer=normalized_columns_initializer(0.01), biases_initializer=None)   #changed   
+        
+        # print('softmax')
+        # print(np.shape(self.policy))
         
         self.advantages = tf.placeholder(shape=[None],dtype=tf.float32)
                 
@@ -388,7 +408,33 @@ class Worker():
                              self.ac_network.timestep:np.vstack(timesteps),
                              self.ac_network.advantages:advantages,
                              self.ac_network.state_in[0]:rnn_state[0],
-                             self.ac_network.state_in[1]:rnn_state[1]}  
+                             self.ac_network.state_in[1]:rnn_state[1]} 
+                
+            # print('update-step')
+            
+            # print('prev_rewards_ch')
+            # print(np.shape(np.vstack(prev_rewards_ch)))
+            
+            # print('prev_actions')
+            # print(np.shape(prev_actions))
+        
+            # print('h_noise')
+            # print(np.shape(np.vstack(h_noises)))
+            
+            # print('actions')
+            # print(np.shape(actions))
+            
+            # print('advantages')
+            # print(np.shape(advantages))
+            
+            # print('state_in 0')
+            # print(np.shape(rnn_state[0]))
+            
+            # print('state_in 1')
+            # print(np.shape(rnn_state[1]))
+            
+            
+          
                 
 
             v_l, p_l,e_l,v_n,_, grad_ = sess.run([self.ac_network.value_loss, # added AV

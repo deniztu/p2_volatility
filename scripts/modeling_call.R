@@ -15,8 +15,8 @@ setwd('../')
 # Preprocess test files #
 #########################
 
-preprocess_rnn_data_for_modeling(rnn_type = 'lstm_a2c'
-                                 , file_string = '%s_nh_48_lr_0_0001_n_n_p_0_ew_lin_vw_0_5_dr_0_5_res_d_f_p_%s_rt_con_a_4_n_300_te_50000_id_%s_test_b_daw_p_%s'
+preprocess_rnn_data_for_modeling(rnn_type = 'lstm2_a2c'
+                                 , file_string = '%s_nh_48_lr_0_0001_n_u_p_0_5_ew_0_vw_0_5_dr_0_5_res_d_f_p_%s_rt_con_a_4_n_300_te_50000_id_%s_test_b_daw_p_%s'
                                  , is_noise = FALSE
                                  , num_instances = 20
                                  , train_sds = c('0_1')
@@ -51,13 +51,13 @@ fit_model_to_rnn_data(stan_models = c(2), preprocessed_file_name = 'pp_data_lstm
 
 #debugonce(fit_model_to_rnn_data)
 
-for (m in c(9)){
+for (m in c(1:9)){
   
-  for (i in c(1:19)){
+  for (i in c(1:20)){
     
     for (w in c(1:3)){
       
-      file = sprintf('pp_data_lstm_a2c_nh_48_lr_0_0001_n_n_p_0_ew_lin_vw_0_5_dr_0_5_res_d_f_p_0_1_rt_con_a_4_n_300_te_50000_id_%s_test_b_daw_p_%s.RData', i,w)
+      file = sprintf('pp_data_lstm2_a2c_nh_48_lr_0_0001_n_u_p_0_5_ew_0_vw_0_5_dr_0_5_res_d_f_p_0_1_rt_con_a_4_n_300_te_50000_id_%s_test_b_daw_p_%s.RData', i,w)
     
       fit_model_to_rnn_data(stan_models = c(m), preprocessed_file_name = file,
                             num_instances = 1, 
@@ -67,6 +67,7 @@ for (m in c(9)){
     
   }
 }
+
 
 ########################
 # fit human data       #
@@ -79,7 +80,7 @@ load(sprintf('data/intermediate_data/modeling/preprocessed_data_for_modeling/%s'
 # nRuns = num_instances
 subject_ids = c(1:res$nRuns)
 
-for (m in c(8:9)){
+for (m in c(8)){
   
       # debugonce(fit_model_to_rnn_data)
 

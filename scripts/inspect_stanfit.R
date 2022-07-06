@@ -10,7 +10,7 @@ setwd('../data/intermediate_data/modeling/modeling_fits')
 
 # CONFIG
 
-STANFIT = 'stan_fit_m_2_d_rnn_n_f_rt_continuous_train_sd_meta_volatility_id_0_test_sd_0_32_t_2021_11_23_17_52_24.RData'
+STANFIT = 'stan_fit_m_8_d_lstm2_a2c_nh_48_lr_0_0001_n_u_p_0_5_ew_0_vw_0_5_dr_0_5_res_d_f_p_0_1_rt_con_a_4_n_300_te_50000_id_18_test_b_daw_p_1_id_1.RData'
 load(STANFIT)
 
 

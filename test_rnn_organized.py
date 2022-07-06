@@ -19,24 +19,23 @@ daw_walks = ['classes/bandits/Daw2006_payoffs1.csv',
              'classes/bandits/Daw2006_payoffs2.csv',
              'classes/bandits/Daw2006_payoffs3.csv']
 
-for id_ in range(4,20):    
+for id_ in range(0,20):    
 
-        train_mab = bc.bandit(bandit_type = 'stationary'
-                            , arms = 2
-                            , num_steps = 50
-                            , reward_type = 'binary'
-                            , reward_rate = 0.9
-                            , dependant = True)
+        train_mab = bc.bandit(bandit_type = 'restless'
+                            , arms = 4
+                            , num_steps = 300
+                            , reward_type = 'continuous'
+                            , noise_sd = 0.1)
         
         nnet = nn.neural_network(bandit = train_mab
                             , noise = 'update-dependant'
                             , value_loss_weight= 0.5
-                            , entropy_loss_weight = 0
+                            , entropy_loss_weight = 'linear'
                             , rnn_type = 'lstm2'
                             , noise_parameter = 0.5 
                             , learning_algorithm = 'a2c'
-                            , n_iterations = 20000
-                            , model_id= 999
+                            , n_iterations = 50000
+                            , model_id= id_
                             , n_hidden_neurons = 48)
         
         # train the rnn

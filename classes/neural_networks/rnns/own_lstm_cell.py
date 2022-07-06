@@ -17,31 +17,31 @@ class LSTM():
         
     def step(self, prev, x):
         
-        print('prev')
-        print(np.shape(prev))
+        # print('prev')
+        # print(np.shape(prev))
         
         
         
         ht_1, ct_1 = prev
         
-        print('ht_1')
-        print(np.shape(ht_1))
+        # print('ht_1')
+        # print(np.shape(ht_1))
         
-        print('ct_1')
-        print(np.shape(ct_1))
+        # print('ct_1')
+        # print(np.shape(ct_1))
         
         if self.add_noise:
-            print('x')
-            print(np.shape(x))
+            # print('x')
+            # print(np.shape(x))
             
             
             x, noise_h = x[:,:self.input_size], x[:,-self.hidden_size:]
             
-            print('x after')
-            print(np.shape(x))
+            # print('x after')
+            # print(np.shape(x))
             
-            print('noise_h')
-            print(np.shape(noise_h))
+            # print('noise_h')
+            # print(np.shape(noise_h))
         
         
         ####
@@ -66,22 +66,22 @@ class LSTM():
         if self.add_noise:
             
             noise_added = noise_h * tf.math.abs(ht - ht_1)
-            print('noise_added')
-            print(np.shape(noise_added))
+            # print('noise_added')
+            # print(np.shape(noise_added))
             
             noise_added = tf.stop_gradient(noise_added) # treat noise as contraint, which the network is unaware of
-            print('noise_added2')
-            print(np.shape(noise_added))
+            # print('noise_added2')
+            # print(np.shape(noise_added))
             
             ht          = ht + noise_added
             
-            print('ht_with_noise')
-            print(np.shape(ht))
+            # print('ht_with_noise')
+            # print(np.shape(ht))
             
-            print('tuple')
-            print(np.shape(tf.tuple([ht, ct])))
+            # print('tuple')
+            # print(np.shape(tf.tuple([ht, ct])))
             
-            print('mean')
-            print(tf.reduce_mean(tf.math.abs(ht - ht_exact)))
+            # print('mean')
+            # print(tf.reduce_mean(tf.math.abs(ht - ht_exact)))
         
         return tf.tuple([ht, ct])#, tf.reduce_mean(tf.math.abs(ht - ht_exact))

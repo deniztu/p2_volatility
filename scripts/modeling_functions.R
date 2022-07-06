@@ -281,7 +281,7 @@ fit_model_to_rnn_data <- function(stan_models # vector of integers according to 
                                   , cognitive_model_directory = 'cognitive_models/'
                                   , num_instances
                                   , sd_range
-                                  , subject_ids # which subjects/instances to model
+                                  , subject_ids # which subjects/runs to model
 ){
   
   # inside R, source Python script

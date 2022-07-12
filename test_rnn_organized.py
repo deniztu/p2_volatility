@@ -28,11 +28,12 @@ for id_ in range(0,20):
                             , noise_sd = 0.1)
         
         nnet = nn.neural_network(bandit = train_mab
-                            , noise = 'update-dependant'
-                            , value_loss_weight= 0.5
+                            , noise = 'none'
+                            , discount_rate = 0.8
+                            , value_loss_weight= 0.05
                             , entropy_loss_weight = 'linear'
-                            , rnn_type = 'lstm2'
-                            , noise_parameter = 0.5 
+                            , rnn_type = 'lstm'
+                            , noise_parameter = 0
                             , learning_algorithm = 'a2c'
                             , n_iterations = 50000
                             , model_id= id_

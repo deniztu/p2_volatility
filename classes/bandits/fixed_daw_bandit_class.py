@@ -35,9 +35,11 @@ class load_daw_bandit:
         # scale rewards between 0-1 (max points 100)
         rewards = rewards/100
 
-        # mean center rewards
+        # mean center rewards (commented to test mean center effect on exploration)
         centered_pay_off_arr = rewards - np.mean(rewards)
-    
+        #pay_off_arr = rewards
+        
+        
         return(centered_pay_off_arr, rewards)
 
 # TEST

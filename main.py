@@ -1,156 +1,73 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Mar  3 11:29:28 2022
+
+@author: Deniz
+"""
+
 from classes.bandits import fixed_bandit_class as fbc
 from classes.bandits import bandit_class as bc
-from classes.neural_networks import network_class_LSTM_v2_Deniz_IP2_AC3 as nn
+from classes.neural_networks import network_class_organized_lstm_cell as nn
 from matplotlib import pyplot as plt
 import tensorflow as tf
 import numpy as np
 import pandas as pd
+import pickle
 
-#%% Train the rnn
-
-bandit_types = ['.1']
-
-
-# this_bandit_type = 'stationary'
-
-reward_types = ['continuous']
-
-# reward_type = 'binary'
+# =============================================================================
+# Cell Type: LSTM | Entropy: linear | Noise: None | Alg: A2C 
+# Cell Type: LSTM | Entropy: 0         | Noise: None | Alg: A2C 
+# Cell Type: LSTM | Entropy: 0.05     | Noise: None | Alg: A2C 
+# =============================================================================
 
 
-for id_ in range(1):
-    for isnoise in [False]:
-        for reward_type in reward_types:
-            for bandit_type in bandit_types:
+
+
+daw_walks = ['classes/bandits/Daw2006_payoffs1.csv',
+             'classes/bandits/Daw2006_payoffs2.csv',
+             'classes/bandits/Daw2006_payoffs3.csv']
+
+entropies = [0.05, 'linear']
+
+
+for e in entropies:
+    
+    for id_ in range(9, 30):    
+    
+            train_mab = bc.bandit(bandit_type = 'restless'
+                                , arms = 4
+                                , num_steps = 300
+                                , reward_type = 'continuous'
+                                , noise_sd = 0.1
+                                , punish = True)
             
-                # intitialise training bandit
-                
-                if bandit_type == '.05':
-                    this_bandit_type = 'restless'
-                    sd = .05
-                    
-                if bandit_type == '.1':
-                    this_bandit_type = 'restless'
-                    sd = .1
-                    
-                if bandit_type == 'meta_volatility':
-                    this_bandit_type = bandit_type
-                    sd = None
-                    
-                
-                train_mab = bc.bandit(bandit_type = this_bandit_type
-                                    , arms = 4
-                                    , num_steps = 300
-                                    , reward_type = reward_type
-                                    , noise_sd = sd)
-
-                        
-                # intitialise rnn class
-                nnet = nn.neural_network(bandit = train_mab
-                                    , noise = False
-                                    , entropy_scaling=0
-                                    , weber_fraction=0
-                                    , n_iterations = 50000
-                                    , model_id= id_
-                                    , train_sd = bandit_type)
-                # train the rnn
-                # nnet.train()
-                
-                # reset the rnn
-                nnet.reset()
-                
-                # sd_range = np.arange(0.02, 0.34, 0.02)        
-                
-                # for sd_ in sd_range:
-                
-                #### USE THE FOLLOWING FOR FR/VR    
-                
-                # test_mab = bc.bandit(bandit_type = 'fixed_ratio'
-                #                     , arms = 2 
-                #                     , num_steps = 1000
-                #                     , reward_rate = 1/4)
-                
-                # nnet.test(n_replications = 20,
-                # # num_rins = 1,
-                # bandit = test_mab,
-                # bandit_param_range = [0.25])
-                
-                #### UNTIL HERE
-                
-                # test_mab = bc.bandit(bandit_type = 'variable_ratio'
-                #                     , arms = 2 
-                #                     , num_steps = 400
-                #                     , reward_rate = 1/4)
-                
-                    # fbc.create_bandit(bandit_type = 'restless'
-                    #                     , arms = 4 
-                    #                     , num_steps = 300
-                    #                     , reward_type='continuous'
-                    #                     , num_runs = 10
-                    #                     , num_rins = 1
-                    #                     , noise_sd = sd_)
-                
-                test_mab = 'fixed_res_rt_con_p_{}_a_4_n_300_run_{}.zip'
-                
-                # test the rnn
-                # nnet.test(n_replications = 1,
-                #           num_rins = 1,
-                #           bandit = test_mab,
-                #           bandit_param_range = np.arange(0.05, 0.55, 0.05),
-                #           use_fixed_bandits = False,
-                #           reward_type = 'binary')
-                
-                nnet.test(n_replications = 10,
-                num_rins = 1,
-                bandit = test_mab,
-                bandit_param_range = np.arange(0.02, 0.34, 0.02),
-                use_fixed_bandits = True,
-                reward_type = 'continuous')
-                
-
-                
-# # flatten final_df_list as it is list of lists
-# flat_list = [item for sublist in final_df_list for item in sublist]
-
-# # create list with names of the index of the multiindex df
-# multiindex_list = ['rnn_type', 'rnn_id', 'rnn_test_sd', 'run', 'reward_instance']
-
-# # concat df_list rowwise
-# all_dfs = pd.concat(flat_list)
-
-# # make all_dfs a muliindex df
-# mult_ind_df = all_dfs.set_index(multiindex_list)
-
-# # pickle the file
-# filename = 'all_binary_test_runs'
-# outfile = open(filename,'wb')
-
-# pickle.dump(mult_ind_df, outfile)
-
-# outfile.close()
-
-
-        
-        
+            nnet = nn.neural_network(bandit = train_mab
+                                , noise = 'update-dependant'
+                                , discount_rate = 0.5
+                                , value_loss_weight= 0.5
+                                , entropy_loss_weight = 0.05#e
+                                , rnn_type = 'rnn'
+                                , noise_parameter = 0.5
+                                , learning_algorithm = 'reinforce'
+                                , n_iterations = 50000
+                                , model_id= 15
+                                , n_hidden_neurons = 48)
+            
+            # train the rnn
+            nnet.train()
+            
+            # reset the rnn
+            nnet.reset()
+            
+            #test_mab = 'fixed_res_rt_con_p_{}_a_4_n_300_run_{}.zip'
+            
+            for daw_walk in range(3):
     
-# test = bc.bandit(bandit_type = 'fixed_ratio'
-#                                     , arms = 2 
-#                                     , num_steps = 400
-#                                     , reward_rate = 1/20)
+                # daw walk
+                test_mab = daw_walks[daw_walk]
+                
+                nnet.test(bandit = test_mab, bandit_param_range = [daw_walk+1], n_runs = 1)
     
-# rewards, _ = test.generate_task()  
 
-# plt.plot(rewards)  
-
-# np.sum(rewards)
-
-# test = bc.bandit(bandit_type = 'variable_ratio'
-#                                     , arms = 2 
-#                                     , num_steps = 400
-#                                     , reward_rate = 1/4)
     
-# rewards, _ = test.generate_task()  
-
-# np.sum(rewards)
-
-# plt.plot(rewards) 
+    

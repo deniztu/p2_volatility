@@ -13,8 +13,8 @@ class bandit:
         arms: int, number of bandit arms
         num_steps: int, number of trials
         dependant: bool, should reward probs of arms be dependant
-        reward_type: 'continuous' or 'binary', note if 'continuous' rewards are mean centered!
-        punish: bool, should non-rewards be negative
+        reward_type: 'continuous' or 'binary'
+        punish: bool, if reward_type == 'binary': non-rewards are negative, if reward_type == 'continuous': rewards are mean centered! 
 
         if bandit_type == 'stationary':
             reward_rate: float, probability of observing reward
@@ -109,8 +109,13 @@ class bandit:
                     rewards = 2*rewards-1
             
             if self.reward_type == 'continuous':
-                # mean center rewards
-                rewards = r_probs - np.mean(r_probs)
+                
+                rewards = r_probs
+                
+                if self.punish:
+                    # mean center rewards
+                    rewards = r_probs - np.mean(r_probs)
+
             
             return rewards, r_probs
         

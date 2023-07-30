@@ -35,9 +35,6 @@ parameters {
 
 model {
   
-  rho[nSubjects] ~ normal(0,10);
-  phi[nSubjects] ~ normal(0,10);
-  
   for (s in 1:nSubjects){
     
     vector[4] v[nTrials+1]; // value
@@ -49,6 +46,9 @@ model {
 	  v[1] = initV;
 	  h[1] = initH;
 	  eb = rep_vector(0, 4);
+	  
+	  rho[s] ~ normal(0,10);
+    phi[s] ~ normal(0,10);
 	
 	  for (t in 1:nTrials){
 	    

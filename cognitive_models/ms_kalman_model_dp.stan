@@ -1,0 +1,134 @@
+data {
+	int nTrials; //number of trials
+	int<lower=1> nSubjects; // number of subjects
+	int choice[nSubjects, nTrials]; // vector of choices
+	real<lower=0, upper=100> reward[nSubjects, nTrials]; // vector of rewards
+}
+
+transformed data {
+  real<lower=0, upper=100> v1;
+  real<lower=0> sig1;
+  real<lower=0> sigO;
+  real<lower=0> sigD;
+  real<lower=0,upper=1> decay;
+  real<lower=0, upper=100> decay_center;
+  
+  real initH;  // initial values for H (recency weighted average) for each arm
+  
+  v1 = 50;
+  sig1 = 4;
+  sigO = 4;
+  sigD =  2.8;
+  decay = 0.9836;
+  decay_center = 50;
+  initH = 0;
+}
+
+parameters {
+  real<lower=0> beta[nSubjects];
+  real rho[nSubjects];
+  // perseveration stepsize
+	real <lower=0,upper=1> alpha_h[nSubjects];
+}
+
+model {
+  
+  for (s in 1:nSubjects){
+    
+    vector[4] v;   // value (mu)
+    vector[4] sig; // sigma
+    real pe;       // prediction error
+    real Kgain;    // Kalman gain
+    vector[4] pb;  // perseveration bonus
+    vector[4] h; // recency weighted perseveration
+
+  
+    v = rep_vector(v1, 4);
+    h = rep_vector(initH, 4);
+    sig = rep_vector(sig1, 4);
+    
+    rho[s] ~ normal(0,10);
+  
+    for (t in 1:nTrials) {        
+    
+      if (choice[s, t] != 0) {
+        
+        // rho: perseveration bonus
+        pb = rep_vector(0.0, 4);
+        
+        if (t>1) {
+          if (choice[s, t-1] !=0) {
+            pb[choice[s, t-1]] = rho[s];
+          } 
+        }
+        
+        choice[s, t] ~ categorical_logit( beta[s] * (v + rho[s]*h));  // compute action probabilities
+        
+        pe = reward[s, t] - v[choice[s, t]];  # prediction error 
+        Kgain = sig[choice[s, t]]^2 / (sig[choice[s, t]]^2 + sigO^2); # Kalman gain
+        
+        v[choice[s, t]] = v[choice[s, t]] + Kgain * pe;  # value/mu updating (learning)
+        sig[choice[s, t]] = sqrt( (1-Kgain) * sig[choice[s, t]]^2 ); # sigma updating
+      
+        // recency weighted perseveration
+        pb = rep_vector(0.0, 4);
+        pb[choice[s, t]] = 1;
+        
+        h = h + alpha_h[s]*(pb - h);
+      
+      }
+    
+    v = decay * v + (1-decay) * decay_center;  
+    for (j in 1:4) 
+      sig[j] = sqrt( decay^2 * sig[j]^2 + sigD^2 );
+    #sig = sqrt( decay^2 * sig^2 + sigD^2 );  # no elementwise exponentiation in STAN!
+    }
+  }
+}
+
+generated quantities{
+  real log_lik[nSubjects, nTrials];
+  int predicted_choices[nSubjects, nTrials];
+
+  vector[4] v;   # value (mu)
+  vector[4] h; // recency weighted perseveration
+  vector[4] sig; # sigma
+  real pe[nSubjects, nTrials];       // prediction error
+  real Kgain;    # Kalman gain
+  vector[4] pb;  // perseveration bonus
+
+	for (s in 1:nSubjects){
+	  
+    h = rep_vector(initH, 4);
+    v = rep_vector(v1, 4);
+    sig = rep_vector(sig1, 4);
+
+    for (t in 1:nTrials) {
+
+    if (choice[s, t] != 0) {
+
+      log_lik[s, t] = categorical_logit_lpmf(choice[s, t] | beta[s] * (v + rho[s]*h));
+      predicted_choices[s, t] = categorical_logit_rng(beta[s] * (v + rho[s]*h));
+
+      pe[s, t] = reward[s, t] - v[choice[s, t]];  # prediction error
+      Kgain = sig[choice[s, t]]^2 / (sig[choice[s, t]]^2 + sigO^2); # Kalman gain
+
+      v[choice[s, t]] = v[choice[s, t]] + Kgain * pe[s, t];  # value/mu updating (learning)
+      sig[choice[s, t]] = sqrt( (1-Kgain) * sig[choice[s, t]]^2 ); # sigma updating
+    
+      // recency weighted perseveration
+      pb = rep_vector(0.0, 4);
+      pb[choice[s, t]] = 1;
+      
+      h = h + alpha_h[s]*(pb - h);
+  
+    }
+
+    v = decay * v + (1-decay) * decay_center;
+    for (j in 1:4)
+      sig[j] = sqrt( decay^2 * sig[j]^2 + sigD^2 );
+    #sig = sqrt( decay^2 * sig^2 + sigD^2 );  # no elementwise exponentiation in STAN!
+  }
+  }
+}
+

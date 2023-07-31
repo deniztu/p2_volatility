@@ -59,17 +59,17 @@ model {
         
         choice[s, t] ~ categorical_logit( beta[s] * (v + eb + pb));  // compute action probabilities
         
-        pe = reward[s, t] - v[choice[s, t]];  # prediction error 
-        Kgain = sig[choice[s, t]]^2 / (sig[choice[s, t]]^2 + sigO^2); # Kalman gain
+        pe = reward[s, t] - v[choice[s, t]];  // prediction error 
+        Kgain = sig[choice[s, t]]^2 / (sig[choice[s, t]]^2 + sigO^2); // Kalman gain
         
-        v[choice[s, t]] = v[choice[s, t]] + Kgain * pe;  # value/mu updating (learning)
-        sig[choice[s, t]] = sqrt( (1-Kgain) * sig[choice[s, t]]^2 ); # sigma updating
+        v[choice[s, t]] = v[choice[s, t]] + Kgain * pe;  // value/mu updating (learning)
+        sig[choice[s, t]] = sqrt( (1-Kgain) * sig[choice[s, t]]^2 ); // sigma updating
       }
     
     v = decay * v + (1-decay) * decay_center;  
     for (j in 1:4) 
       sig[j] = sqrt( decay^2 * sig[j]^2 + sigD^2 );
-    #sig = sqrt( decay^2 * sig^2 + sigD^2 );  # no elementwise exponentiation in STAN!
+    //sig = sqrt( decay^2 * sig^2 + sigD^2 );  // no elementwise exponentiation in STAN!
     }
   }
 }
@@ -78,24 +78,24 @@ generated quantities{
   real log_lik[nSubjects, nTrials];
   int predicted_choices[nSubjects, nTrials];
 
-  vector[4] v;   # value (mu)
-  vector[4] sig; # sigma
+  matrix[4, nTrials+1] v[nSubjects];   // value (mu)
+  matrix[4, nTrials+1] sig[nSubjects]; // sigma
   real pe[nSubjects, nTrials];       // prediction error
-  real Kgain;    # Kalman gain
+  real Kgain;    // Kalman gain
   vector[4] eb;  // exploration bonus
   vector[4] pb;  // perseveration bonus
 
 	for (s in 1:nSubjects){
 
-    v = rep_vector(v1, 4);
-    sig = rep_vector(sig1, 4);
+    v[s][,1] = rep_vector(v1, 4);
+    sig[s][,1] = rep_vector(sig1, 4);
 
     for (t in 1:nTrials) {
 
     if (choice[s, t] != 0) {
 
         // phi: exploration bonus
-        eb = phi[s] * sig;
+        eb = phi[s] * sig[s][,t];
 
         // rho: perseveration bonus
         pb = rep_vector(0.0, 4);
@@ -105,21 +105,34 @@ generated quantities{
             pb[choice[s, t-1]] = rho[s];
           }
         }
+      
+      log_lik[s, t] = categorical_logit_lpmf(choice[s, t] | beta[s] * (v[s][,t] + eb + pb));
+      
+      // new softmax functions
+      // print("sm")
+      // print(softmax(beta[s] * (v[s][,t] + eb + pb)))
+      // print("sm log")
+      // print(log_softmax(beta[s] * (v[s][,t] + eb + pb)))
+      
+      
+      predicted_choices[s, t] = categorical_logit_rng(beta[s] * (v[s][,t] + eb + pb));
 
-      log_lik[s, t] = categorical_logit_lpmf(choice[s, t] | beta[s] * (v + eb + pb));
-      predicted_choices[s, t] = categorical_logit_rng(beta[s] * (v + eb + pb));
-
-      pe[s, t] = reward[s, t] - v[choice[s, t]];  # prediction error
-      Kgain = sig[choice[s, t]]^2 / (sig[choice[s, t]]^2 + sigO^2); # Kalman gain
-
-      v[choice[s, t]] = v[choice[s, t]] + Kgain * pe[s, t];  # value/mu updating (learning)
-      sig[choice[s, t]] = sqrt( (1-Kgain) * sig[choice[s, t]]^2 ); # sigma updating
+      pe[s, t] = reward[s, t] - v[s][choice[s, t],t];  // prediction error
+      
+      Kgain = sig[s][choice[s, t],t]^2 / (sig[s][choice[s, t],t]^2 + sigO^2); // Kalman gain
+      
+      v[s][,t+1] = v[s][,t]; // move current v to next trial 
+      v[s][choice[s, t], t+1] = v[s][choice[s, t],t] + Kgain * pe[s, t];  // value/mu updating (learning)
+      
+      sig[s][,t+1] = sig[s][,t]; // move current sig to next trial
+      sig[s][choice[s, t], t+1] = sqrt( (1-Kgain) * sig[s][choice[s, t],t]^2 ); // sigma updating
+      
     }
 
-    v = decay * v + (1-decay) * decay_center;
+    v[s][,t+1] = decay * v[s][,t+1] + (1-decay) * decay_center;
     for (j in 1:4)
-      sig[j] = sqrt( decay^2 * sig[j]^2 + sigD^2 );
-    #sig = sqrt( decay^2 * sig^2 + sigD^2 );  # no elementwise exponentiation in STAN!
+      sig[s][j,t+1] = sqrt( decay^2 * sig[s][j,t+1]^2 + sigD^2 );
+
   }
   }
 }

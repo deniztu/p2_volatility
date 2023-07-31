@@ -1,17 +1,14 @@
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
-import scipy
+from scipy import signal
 import numpy as np
 import pandas as pd
-import sys, os, scipy.signal
-import zipfile
-import pdb
 import pickle
+import glob
+import os
 
 from classes.neural_networks.rnns import recurrent_networks
 from classes.neural_networks.rnns import own_lstm_cell
-
-from classes.bandits import bandit_class as bc
 from classes.bandits import fixed_bandit_class as fbc
 from classes.bandits import fixed_daw_bandit_class as fdbc
 from helpers import dot2_
@@ -63,7 +60,7 @@ def normalized_columns_initializer(std=1.0):
 
 # Discounting function used to calculate discounted returns.
 def discount(x, gamma):
-    return scipy.signal.lfilter([1], [1, -gamma], x[::-1], axis=0)[::-1]
+    return signal.lfilter([1], [1, -gamma], x[::-1], axis=0)[::-1]
 
 # class to generate the bandit tasks
 class conditioning_bandit():
@@ -102,10 +99,6 @@ class AC_Network():
                         coefficient, coefficient for the computation noise or decision entropy
 
         '''
-        #Noise is not needed here
-        # if noise == 'update-dependant' : 
-        #     n
-        # else: entropy_loss_weight = noise_parameter
         
         # Input
         self.prev_rewardsch        = tf.placeholder(shape=[None,1], dtype=tf.float32, name="v1")
@@ -115,14 +108,16 @@ class AC_Network():
         input_                     = tf.concat([self.prev_rewardsch, self.prev_actions_onehot],1, name="v5")
 
         self.actions             = tf.placeholder(shape=[None], dtype=tf.int32, name = "v6")
-        self.actions_onehot      = tf.one_hot(self.actions, n_arms, dtype=tf.float32,  name = "v7") 
+        self.actions_onehot      = tf.one_hot(self.actions, n_arms, dtype=tf.float32,  name = "v7")
         
         if entropy_loss_weight == 'linear':
             self.entropy_loss_weight = tf.placeholder("float", None,  name = "v8") ####Change IP
             
         else: 
             self.entropy_loss_weight = entropy_loss_weight
-
+            
+        print('entropy loss weight')
+        print(self.entropy_loss_weight)
 
         #Recurrent network for temporal dependencies
         nb_units = n_hidden_neurons
@@ -145,6 +140,9 @@ class AC_Network():
             state_in = tf.contrib.rnn.LSTMStateTuple(c_in, h_in)
             lstm_outputs, lstm_state = tf.nn.dynamic_rnn(lstm_cell, rnn_in, initial_state=state_in, sequence_length=step_size,time_major=False)
             lstm_c, lstm_h = lstm_state
+            
+            # add added_noises_means for reinforce algorithm
+            self.added_noises_means = tf.convert_to_tensor(np.zeros(48))
             
             #print('shapes of ht and ct')
             # print(np.shape(lstm_h))
@@ -201,6 +199,9 @@ class AC_Network():
             
             # states, self.added_noises_means = tf.scan(lstm_cell.step, rnn_in, initializer=(self.state_in))
             states = tf.scan(lstm_cell.step, rnn_in, initializer=(self.state_in))
+            
+            # add added_noises_means for reinforce algorithm
+            self.added_noises_means = tf.convert_to_tensor(np.zeros(48))
             
             lstm_h, lstm_c = states
             
@@ -351,6 +352,9 @@ class Worker():
         self.entropy_loss_weight = entropy_loss_weight
         
     def train(self, rollout, sess, gamma, bootstrap_value, entr_):
+        
+
+        
         '''
         train method
         '''        
@@ -365,6 +369,7 @@ class Worker():
         
         if self.learning_algorithm == 'a2c':
             values = rollout[:,4]
+            
             self.value_plus = np.asarray(values.tolist() + [bootstrap_value])
             advantages = rewards_ch + gamma * self.value_plus[1:] - self.value_plus[:-1]
             advantages = discount(advantages,gamma) # added AC
@@ -372,21 +377,18 @@ class Worker():
         
         
         if self.learning_algorithm == 'reinforce':
-            values = 0
+            values = tf.convert_to_tensor(np.zeros(300))
         
         self.rewards_plus  = np.asarray(rewards_ch.tolist() + [bootstrap_value])
         discounted_rewards = discount(self.rewards_plus,gamma)[:-1]
 
        
-        if self.rnn_type == 'lstm' or self.rnn_type == 'lstm2' and self.learning_algorithm == 'a2c':
-        
+        if self.rnn_type == 'lstm' and self.learning_algorithm == 'a2c' or self.rnn_type == 'lstm2' and self.learning_algorithm == 'a2c':
             
             rnn_state = self.ac_network.state_init ###change
             
             
             if self.entropy_loss_weight == 'linear':
-                
-                #print(entr_)
                 
                 feed_dict = {self.ac_network.target_v:discounted_rewards,
                              self.ac_network.prev_rewardsch:np.vstack(prev_rewards_ch),
@@ -400,65 +402,96 @@ class Worker():
                              self.ac_network.entropy_loss_weight: entr_}   
                 
             else:
+                
                 feed_dict = {self.ac_network.target_v:discounted_rewards,
-                             self.ac_network.prev_rewardsch:np.vstack(prev_rewards_ch),
+                              self.ac_network.prev_rewardsch:np.vstack(prev_rewards_ch),
+                              self.ac_network.prev_actions:prev_actions,
+                              self.ac_network.h_noise:np.vstack(h_noises),
+                              self.ac_network.actions:actions,
+                              self.ac_network.timestep:np.vstack(timesteps),
+                              self.ac_network.advantages:advantages,
+                              self.ac_network.state_in[0]:rnn_state[0],
+                              self.ac_network.state_in[1]:rnn_state[1]} 
+                
+            v_l, p_l,e_l,v_n,_, grad_ = sess.run([self.ac_network.value_loss,
+                                      self.ac_network.policy_loss,
+                                      self.ac_network.entropy,
+                                      self.ac_network.var_norms,
+                                      self.ac_network.apply_grads, 
+                                      self.ac_network.gradient_norm],
+                                      feed_dict=feed_dict)            
+
+            return v_l / len(rollout), p_l / len(rollout),e_l / len(rollout), 0.,v_n, grad_ # added AC
+
+                
+        if self.rnn_type == 'lstm2' and self.learning_algorithm == 'reinforce':
+            
+            rnn_state = self.ac_network.state_init ###change
+            
+            
+            if self.entropy_loss_weight == 'linear':
+                
+                
+                feed_dict = {self.ac_network.prev_rewardsch:np.vstack(prev_rewards_ch),
+                             self.ac_network.prev_actions:prev_actions,
+                             self.ac_network.h_noise:np.vstack(h_noises), 
+                             self.ac_network.actions:actions,
+                             self.ac_network.timestep:np.vstack(timesteps),
+                             self.ac_network.advantages:discounted_rewards,
+                             self.ac_network.state_in[0]:rnn_state[0],
+                             self.ac_network.state_in[1]:rnn_state[1],
+                             self.ac_network.entropy_loss_weight: entr_}   
+                
+            else:
+                feed_dict = {self.ac_network.prev_rewardsch:np.vstack(prev_rewards_ch),
                              self.ac_network.prev_actions:prev_actions,
                              self.ac_network.h_noise:np.vstack(h_noises),
                              self.ac_network.actions:actions,
                              self.ac_network.timestep:np.vstack(timesteps),
-                             self.ac_network.advantages:advantages,
+                             self.ac_network.advantages:discounted_rewards,
                              self.ac_network.state_in[0]:rnn_state[0],
                              self.ac_network.state_in[1]:rnn_state[1]} 
                 
-            # print('update-step')
-            
-            # print('prev_rewards_ch')
-            # print(np.shape(np.vstack(prev_rewards_ch)))
-            
-            # print('prev_actions')
-            # print(np.shape(prev_actions))
-        
-            # print('h_noise')
-            # print(np.shape(np.vstack(h_noises)))
-            
-            # print('actions')
-            # print(np.shape(actions))
-            
-            # print('advantages')
-            # print(np.shape(advantages))
-            
-            # print('state_in 0')
-            # print(np.shape(rnn_state[0]))
-            
-            # print('state_in 1')
-            # print(np.shape(rnn_state[1]))
-            
-            
-          
-                
 
-            v_l, p_l,e_l,v_n,_, grad_ = sess.run([self.ac_network.value_loss, # added AV
-                                                  self.ac_network.policy_loss,
+            p_l,e_l,v_n,_, grad_ = sess.run([self.ac_network.policy_loss,
                                                   self.ac_network.entropy,
                                                   self.ac_network.var_norms,
                                                   self.ac_network.apply_grads, 
                                                   self.ac_network.gradient_norm],
                                                   feed_dict=feed_dict)
+
         
-            return v_l / len(rollout), p_l / len(rollout),e_l / len(rollout), 0.,v_n, grad_ # added AC
+            return p_l / len(rollout),e_l / len(rollout), 0.,v_n, grad_ # added AC
 
         
         if self.rnn_type == 'lstm' and self.learning_algorithm == 'reinforce':
-            
+                        
             rnn_state = self.ac_network.state_init ###change
-            feed_dict = {self.ac_network.prev_rewardsch:np.vstack(prev_rewards_ch),
-                         self.ac_network.prev_actions:prev_actions,
-                         self.ac_network.h_noise:np.vstack(h_noises),
-                         self.ac_network.actions:actions,
-                         self.ac_network.timestep:np.vstack(timesteps),
-                         self.ac_network.advantages:discounted_rewards,
-                         self.ac_network.state_in[0]:rnn_state[0],
-                         self.ac_network.state_in[1]:rnn_state[1]}          
+                        
+            if self.entropy_loss_weight == 'linear':
+                
+                
+                feed_dict = {self.ac_network.prev_rewardsch:np.vstack(prev_rewards_ch),
+                             self.ac_network.prev_actions:prev_actions,
+                             self.ac_network.h_noise:np.vstack(h_noises), 
+                             self.ac_network.actions:actions,
+                             self.ac_network.timestep:np.vstack(timesteps),
+                             self.ac_network.advantages:discounted_rewards,
+                             self.ac_network.state_in[0]:rnn_state[0],
+                             self.ac_network.state_in[1]:rnn_state[1],
+                             self.ac_network.entropy_loss_weight: entr_}   
+                
+            else:
+                feed_dict = {self.ac_network.prev_rewardsch:np.vstack(prev_rewards_ch),
+                             self.ac_network.prev_actions:prev_actions,
+                             self.ac_network.h_noise:np.vstack(h_noises),
+                             self.ac_network.actions:actions,
+                             self.ac_network.timestep:np.vstack(timesteps),
+                             self.ac_network.advantages:discounted_rewards,
+                             self.ac_network.state_in[0]:rnn_state[0],
+                             self.ac_network.state_in[1]:rnn_state[1]} 
+            
+            
 
             p_l,e_l,v_n,_, grad_ = sess.run([self.ac_network.policy_loss,
                                              self.ac_network.entropy,
@@ -470,15 +503,30 @@ class Worker():
             return p_l / len(rollout),e_l / len(rollout), 0.,v_n, grad_
         
         if self.rnn_type == 'rnn' and self.learning_algorithm == 'a2c':
+            
             rnn_state = self.ac_network.state_init[0]
-            feed_dict = {self.ac_network.target_v:discounted_rewards,
-                         self.ac_network.prev_rewardsch:np.vstack(prev_rewards_ch),
-                         self.ac_network.prev_actions:prev_actions,
-                         self.ac_network.h_noise:np.vstack(h_noises),
-                         self.ac_network.actions:actions,
-                         self.ac_network.timestep:np.vstack(timesteps),
-                         self.ac_network.advantages:advantages,
-                         self.ac_network.h_in:rnn_state}
+            
+            if self.entropy_loss_weight == 'linear':
+                                
+                feed_dict = {self.ac_network.target_v:discounted_rewards,
+                             self.ac_network.prev_rewardsch:np.vstack(prev_rewards_ch),
+                             self.ac_network.prev_actions:prev_actions,
+                             self.ac_network.h_noise:np.vstack(h_noises),
+                             self.ac_network.actions:actions,
+                             self.ac_network.timestep:np.vstack(timesteps),
+                             self.ac_network.advantages:advantages,
+                             self.ac_network.h_in:rnn_state,
+                             self.ac_network.entropy_loss_weight: entr_}   
+                
+            else:
+                feed_dict = {self.ac_network.target_v:discounted_rewards,
+                             self.ac_network.prev_rewardsch:np.vstack(prev_rewards_ch),
+                             self.ac_network.prev_actions:prev_actions,
+                             self.ac_network.h_noise:np.vstack(h_noises),
+                             self.ac_network.actions:actions,
+                             self.ac_network.timestep:np.vstack(timesteps),
+                             self.ac_network.advantages:advantages,
+                             self.ac_network.h_in:rnn_state}
             
             v_l, p_l,e_l,v_n,_, grad_ = sess.run([self.ac_network.value_loss,
                                       self.ac_network.policy_loss,
@@ -488,22 +536,38 @@ class Worker():
                                       self.ac_network.gradient_norm],
                                       feed_dict=feed_dict)            
 
-            return v_l / len(rollout), p_l / len(rollout),e_l / len(rollout), 0.,v_n, grad_ # added AC
+            return v_l / len(rollout), p_l / len(rollout),e_l / len(rollout), 0.,v_n, grad_ 
         
         if self.rnn_type == 'rnn' and self.learning_algorithm == 'reinforce':
-            
+                        
             rnn_state = self.ac_network.state_init[0]
-            feed_dict = {self.ac_network.prev_rewardsch:np.vstack(prev_rewards_ch), self.ac_network.prev_actions:prev_actions,
-                self.ac_network.h_noise:np.vstack(h_noises),                     
-                self.ac_network.actions:actions, self.ac_network.timestep:np.vstack(timesteps),
-                self.ac_network.advantages:discounted_rewards, self.ac_network.h_in:rnn_state}            
+            
+            if self.entropy_loss_weight == 'linear':
+                                
+                feed_dict = {self.ac_network.prev_rewardsch:np.vstack(prev_rewards_ch),
+                             self.ac_network.prev_actions:prev_actions,
+                             self.ac_network.h_noise:np.vstack(h_noises),
+                             self.ac_network.actions:actions,
+                             self.ac_network.timestep:np.vstack(timesteps),
+                             self.ac_network.advantages:discounted_rewards,
+                             self.ac_network.h_in:rnn_state,
+                             self.ac_network.entropy_loss_weight: entr_}
+            else:
+            
+                feed_dict = {self.ac_network.prev_rewardsch:np.vstack(prev_rewards_ch),
+                             self.ac_network.prev_actions:prev_actions,
+                             self.ac_network.h_noise:np.vstack(h_noises),                     
+                             self.ac_network.actions:actions,
+                             self.ac_network.timestep:np.vstack(timesteps),
+                             self.ac_network.advantages:discounted_rewards,
+                             self.ac_network.h_in:rnn_state}            
 
             p_l,e_l,v_n,_, grad_ = sess.run([self.ac_network.policy_loss,
-                self.ac_network.entropy,
-                self.ac_network.var_norms,
-                self.ac_network.apply_grads, 
-                self.ac_network.gradient_norm],
-                feed_dict=feed_dict)
+                                             self.ac_network.entropy,
+                                             self.ac_network.var_norms,
+                                             self.ac_network.apply_grads, 
+                                             self.ac_network.gradient_norm],
+                                             feed_dict=feed_dict)
             
             return p_l / len(rollout),e_l / len(rollout), 0.,v_n, grad_
             
@@ -565,7 +629,19 @@ class Worker():
             rnn_state_noise_arr = np.zeros([self.num_steps, self.n_hidden_neurons])
         ##################################################################################
         
-        episode_count = 0
+        # take episode count if model was already trained
+        if os.path.exists(self.model_path):
+            list_of_files = glob.glob(self.model_path + '/*')
+            print('###############')
+            list_of_files = np.array(list_of_files)[[not "checkpoint" in s for s in list_of_files]] # list ignoring checkpoint file
+            print(list_of_files)
+            latest_file = max(list_of_files, key=os.path.getctime)
+            print(latest_file)
+            x = latest_file
+            episode_count = int(x.split('-')[1].split('.')[0]) # get episode_count from latest file
+            print(episode_count)
+        else:
+            episode_count = 0
 
         entr_ = 1
 
@@ -618,6 +694,15 @@ class Worker():
                                      self.ac_network.h_noise:h_noise, 
                                      self.ac_network.entropy_loss_weight:entr_}
                         
+                    else:
+                        
+                        feed_dict = {self.ac_network.prev_rewardsch:[[rch]],
+                                     self.ac_network.prev_actions:[a],
+                                     self.ac_network.timestep:[[t]],
+                                     self.ac_network.state_in[0]:rnn_state[0],
+                                     self.ac_network.state_in[1]:rnn_state[1],
+                                     self.ac_network.h_noise:h_noise}
+                        
                 if self.rnn_type == 'lstm2':
                     
                     if self.entropy_loss_weight == 'linear':
@@ -642,12 +727,23 @@ class Worker():
                 
                 if self.rnn_type == 'rnn':
                     
-                    feed_dict = {self.ac_network.prev_rewardsch:[[rch]],
-                                 self.ac_network.prev_actions:[a],
-                                 self.ac_network.timestep:[[t]],
-                                 self.ac_network.h_in:rnn_state,
-                                 self.ac_network.h_noise:h_noise, 
-                                 self.ac_network.entropy_loss_weight:entr_} ####Change IP
+                    if self.entropy_loss_weight == 'linear':
+                        
+                        feed_dict = {self.ac_network.prev_rewardsch:[[rch]],
+                                     self.ac_network.prev_actions:[a],
+                                     self.ac_network.timestep:[[t]],
+                                     self.ac_network.h_in:rnn_state,
+                                     self.ac_network.h_noise:h_noise, 
+                                     self.ac_network.entropy_loss_weight:entr_}
+                        
+                    else:
+                        
+                        feed_dict = {self.ac_network.prev_rewardsch:[[rch]],
+                                     self.ac_network.prev_actions:[a],
+                                     self.ac_network.timestep:[[t]],
+                                     self.ac_network.h_in:rnn_state,
+                                     self.ac_network.h_noise:h_noise}
+                                        
                                     
                 if self.learning_algorithm == 'a2c':
                 
@@ -658,9 +754,7 @@ class Worker():
                                                                            feed_dict=feed_dict)
                     
                 if self.learning_algorithm == 'reinforce':
-                    
-                    # print('AAA')
-                    
+                                        
                     a_dist,rnn_state_new, rnn_true_state_new, added_noise = sess.run([self.ac_network.policy,
                                                                              self.ac_network.state_out,
                                                                              self.ac_network.true_state_out,
@@ -675,15 +769,11 @@ class Worker():
                 a                   = np.argmax(a_dist == a)
                 
                 if self.rnn_type == 'lstm':
-                    # print('D')
-                    # print(np.shape(rnn_state_new))
 
                     rnn_state           = rnn_state_new
                     
                 if self.rnn_type == 'lstm2':
                     
-                    # print('rnn_state_new later rnn_state')
-                    # print(np.shape(rnn_state_new))
                     rnn_state           = rnn_state_new
                 
                 if self.rnn_type == 'rnn':
@@ -714,8 +804,6 @@ class Worker():
                 if not d:
                     self.env.update()        
             
-            #self.addnoises_mean_values.append(np.mean(added_noise_arr))
-            # self.hidden_mean_values.append(np.mean(state_mean_arr))
             self.episode_rewards.append(episode_reward)
             self.episode_lengths.append(episode_step_count)
 
@@ -723,11 +811,18 @@ class Worker():
             # added gg
             if len(episode_buffer) != 0 and train == True:
                 
-                if self.learning_algorithm == 'a2c':    
-                    v_l, p_l,e_l,g_n,v_n, gg = self.train(episode_buffer,sess,gamma,0.0, entr_) #added
+                if self.learning_algorithm == 'a2c':
                     
-                if self.learning_algorithm == 'reinforce':    
-                    p_l,e_l,g_n,v_n, gg = self.train(episode_buffer,sess,gamma,0.0, entr_) #added
+                    v_l, p_l,e_l,g_n,v_n, gg = self.train(episode_buffer,sess,gamma,0.0, entr_)
+                    
+
+                    
+                if self.learning_algorithm == 'reinforce':
+                    
+                    p_l,e_l,g_n,v_n, gg = self.train(episode_buffer,sess,gamma,0.0, entr_)
+                    
+
+
                 
             # stop after first episode if model is tested
             if train == False:
@@ -747,6 +842,11 @@ class Worker():
             # Periodically save summary statistics.
             if episode_count != 0:
                 if episode_count % 500 == 0 and train == True:
+                    
+                    # create folder to save models
+                    if not os.path.exists(self.model_path):
+                        os.makedirs(self.model_path)
+                    
                     saver.save(sess, self.model_path+'/model-'+str(episode_count)+'.cptk')
                     print("Saved Model Episodes: {}".format(str(episode_count)))
                     mean_reward    = np.mean(self.episode_rewards[-50:])
@@ -823,8 +923,8 @@ class neural_network:
         self.model_id = model_id
         
         
-        # if self.noise == 'update-dependant':
-        #     self.noise_parameter = self.noise_parameter
+        if self.noise == 'update-dependant':
+            self.noise_parameter = self.noise_parameter
         
         if self.noise == 'constant':
             raise ValueError('constant noise is not implemented yet!')
@@ -850,6 +950,8 @@ class neural_network:
                                                                 , self.n_iterations
                                                                 , self.model_id).lower()
         
+        self.model_name = self.model_name
+        
         self.model_path = self.path_to_save_model + self.model_name
         
         self.trainer = tf.train.RMSPropOptimizer(learning_rate=self.learning_rate) 
@@ -858,19 +960,13 @@ class neural_network:
         
         # train the RNN
         train = True
-        
-        # create folder to save models
-        if not os.path.exists(self.model_path):
-            os.makedirs(self.model_path)
                 
         # create folder to save progress
         if not os.path.exists(self.path_to_save_progress):
             os.makedirs(self.path_to_save_progress)
         
         # create the graph
-        
-        # TODO instead of a lot of self. pass nnet class and then nnet.thingy
-        
+                
         self.worker  = Worker(game = conditioning_bandit(self.bandit)
                       , trainer = self.trainer, model_path = self.model_path
                       , model_name = self.model_name
@@ -892,14 +988,22 @@ class neural_network:
         # start tf.Session
         with tf.Session() as sess:
             
-            # added for fixed points analysis
-            self.mysession = tf.Session()
-            
-            print('Training Model: {}'.format(self.model_name))
-            # initialise variables
-            sess.run(tf.global_variables_initializer())
-            # train
-            self.worker.work(self.discount_rate,sess,self.saver,train)
+            # if model exists start from the last checkpoint
+            if os.path.exists(self.model_path):
+                
+                print('Resuming Training Model: {}'.format(self.model_name))
+                ckpt = tf.train.get_checkpoint_state(self.model_path)
+                print(ckpt)
+                self.saver.restore(sess,ckpt.model_checkpoint_path)
+                # train
+                self.worker.work(self.discount_rate,sess,self.saver,train)
+                
+            else: 
+                print('Training Model: {}'.format(self.model_name))
+                # initialise variables
+                sess.run(tf.global_variables_initializer())
+                # train
+                self.worker.work(self.discount_rate,sess,self.saver,train)
             
         # reset the graph
         self.reset()

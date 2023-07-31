@@ -331,16 +331,32 @@ class Worker():
         
         if self.rnn_type == 'lstm' and self.learning_algorithm == 'reinforce':
             
-            rnn_state = self.ac_network.state_init ###change
-            feed_dict = {self.ac_network.prev_rewardsch:np.vstack(prev_rewards_ch),
-                         self.ac_network.prev_actions:prev_actions,
-                         self.ac_network.h_noise:np.vstack(h_noises),
-                         self.ac_network.actions:actions,
-                         self.ac_network.timestep:np.vstack(timesteps),
-                         self.ac_network.advantages:discounted_rewards,
-                         self.ac_network.state_in[0]:rnn_state[0],
-                         self.ac_network.state_in[1]:rnn_state[1]}          
+            if self.entropy_loss_weight == 'linear':
 
+                
+                rnn_state = self.ac_network.state_init ###change
+                feed_dict = {self.ac_network.prev_rewardsch:np.vstack(prev_rewards_ch),
+                             self.ac_network.prev_actions:prev_actions,
+                             self.ac_network.h_noise:np.vstack(h_noises),
+                             self.ac_network.actions:actions,
+                             self.ac_network.timestep:np.vstack(timesteps),
+                             self.ac_network.advantages:discounted_rewards,
+                             self.ac_network.state_in[0]:rnn_state[0],
+                             self.ac_network.state_in[1]:rnn_state[1],
+                             self.ac_network.entropy_loss_weight: entr_} 
+                
+            else:
+                
+                rnn_state = self.ac_network.state_init ###change
+                feed_dict = {self.ac_network.prev_rewardsch:np.vstack(prev_rewards_ch),
+                             self.ac_network.prev_actions:prev_actions,
+                             self.ac_network.h_noise:np.vstack(h_noises),
+                             self.ac_network.actions:actions,
+                             self.ac_network.timestep:np.vstack(timesteps),
+                             self.ac_network.advantages:discounted_rewards,
+                             self.ac_network.state_in[0]:rnn_state[0],
+                             self.ac_network.state_in[1]:rnn_state[1]} 
+    
             p_l,e_l,v_n,_, grad_ = sess.run([self.ac_network.policy_loss,
                                              self.ac_network.entropy,
                                              self.ac_network.var_norms,

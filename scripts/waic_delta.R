@@ -34,7 +34,7 @@ model_names = c("1LR","1LRP","1LRPU", "1LRPT", "1LRU", "1LRT",
 # 9: ms_ql_1lr_dp_t.stan
 
 model_ids = c(1:9)
-rnn_ids = c(0:19)
+rnn_ids = c(0:29)
 walk = 3
 
 

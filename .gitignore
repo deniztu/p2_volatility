@@ -2,6 +2,7 @@
 .spyproject
 __pycache__
 todo.txt
+.Rhistory
 
 plots
 results

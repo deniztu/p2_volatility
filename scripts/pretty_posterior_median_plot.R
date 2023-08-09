@@ -2,7 +2,7 @@
 setwd(file.path(dirname(rstudioapi::getSourceEditorContext()$path)))
 
 # move to relevant directory
-setwd('../data/intermediate_data/modeling/modeling_fits/')
+setwd('../')
 
 library(ggplot2)
 library(PupillometryR)
@@ -14,13 +14,18 @@ library(BayesFactor)
 # # global theme updates
 # ggplot2::theme_update(plot.tag = element_text(face = "bold", colour = "black"))
 
+STAN_PATH = 'data/intermediate_data/modeling/modeling_fits/'
 
-MY_MODELS =  c(15)
+MY_MODEL =  18
 my_clrs_yct <- c("#808080", "#ADD8E6", "#808080", "#ADD8E6")
 
-RNN_INSTANCES = 20
+RNN_INSTANCES = 30
 N_WALKS = 3
 N_SUBS = 31
+
+MY_PARS = c('beta', 'rho', 'alpha_h') # must be the same name as pars in stanfit
+N_SAMPLES = 500 # Number of samples for posterior predictives
+MY_LABELS = c('SM+DP')
 
 RNN_STRING = 'stan_fit_m_%s_d_lstm2_a2c_nh_48_lr_0_0001_n_u_p_0_5_ew_0_vw_0_5_dr_0_5_res_d_f_p_0_1_rt_con_a_4_n_300_te_50000_id_%s_test_b_daw_p_%s_id_1.Rdata'
 HUMAN_STRING = 'stan_fit_m_%s_d_chakroun_placebo_human_bandit_data_id_%s.RData'
@@ -29,44 +34,32 @@ HUMAN_STRING = 'stan_fit_m_%s_d_chakroun_placebo_human_bandit_data_id_%s.RData'
 ### get posterior median values    ###
 ######################################
 
-# initialize matrix
-phi_rnn = matrix(99, nrow = RNN_INSTANCES*N_WALKS, ncol = length(MY_MODELS))
-beta_rnn = matrix(99, nrow = RNN_INSTANCES*N_WALKS, ncol = length(MY_MODELS))
-rho_rnn = matrix(99, nrow = RNN_INSTANCES*N_WALKS, ncol = length(MY_MODELS))
-
-phi_human = matrix(0, nrow = N_SUBS, ncol = length(MY_MODELS))
-beta_human = matrix(0, nrow = N_SUBS, ncol = length(MY_MODELS))
-rho_human = matrix(0, nrow = N_SUBS, ncol = length(MY_MODELS))
-
 # RNNS
+post_medians_rnn = matrix(99, nrow = RNN_INSTANCES*N_WALKS, ncol = length(MY_PARS))
+colnames(post_medians_rnn) = MY_PARS
+
 for (id in c(0:(RNN_INSTANCES-1))){
   for (w in c(1:N_WALKS)){
-    for (m in c(1:length(MY_MODELS))){
       
-      load(sprintf(RNN_STRING, MY_MODELS[m], id, w))
+      load(paste0(STAN_PATH, sprintf(RNN_STRING, MY_MODEL, id, w)))
+      mcmc = rstan::extract(stanfit$stanfit, pars = MY_PARS)
+      post_medians_rnn[(w-1)*RNN_INSTANCES + id + 1, ] = unlist(lapply(mcmc, median))
       
-      df = as.data.frame(stanfit$stanfit)
-
-
-      phi_rnn[(w-1)*RNN_INSTANCES + id + 1, m] = median(df$`phi[1]`)
-      beta_rnn[(w-1)*RNN_INSTANCES + id + 1, m] = median(df$`beta[1]`)
-      rho_rnn[(w-1)*RNN_INSTANCES + id + 1, m] = median(df$`rho[1]`)
-      
-    }
   }
 }
 
 # Humans
+post_medians_human = matrix(99, nrow = N_SUBS, ncol = length(MY_PARS))
+colnames(post_medians_human) = MY_PARS
+
+
 for (id in c(1:(N_SUBS))){
   for (m in c(1:length(MY_MODELS))){
     
-    load(sprintf(HUMAN_STRING, MY_MODELS[m], id))
+    load(paste0(STAN_PATH, sprintf(HUMAN_STRING, MY_MODEL, id)))
     
-    df = as.data.frame(stanfit$stanfit)
-    
-    phi_human[id, m] = median(df$`phi[1]`)
-    beta_human[id, m] = median(df$`beta[1]`)
-    rho_human[id, m] = median(df$`rho[1]`)
+    mcmc = rstan::extract(stanfit$stanfit, pars = MY_PARS)
+    post_medians_human[id, ] = unlist(lapply(mcmc, median))
     
   }
 }
@@ -74,23 +67,19 @@ for (id in c(1:(N_SUBS))){
 ### plot
 
 # create plotting df
-phi = c(as.vector(phi_rnn),as.vector(phi_human))
-beta = c(as.vector(beta_rnn),as.vector(beta_human))
-rho = c(as.vector(rho_rnn),as.vector(rho_human))
-posterior_medians = c(phi, beta, rho)
+
+combined_post_medians = rbind(post_medians_rnn, post_medians_human)
+posterior_medians = c(combined_post_medians)
 
 # create agent labels (times 3, because we have 3 parameters)
-agent = c(rep("RNN", length(phi_rnn)), rep("Human", length(phi_human)))
-agent = rep(agent, 3)
+agent = c(rep("RNN", nrow(post_medians_rnn)), rep("Human", nrow(post_medians_human)))
+agent = rep(agent, length(MY_PARS))
 
 # create parameter labels 
-par = c(rep('phi', length(phi)),rep('beta', length(beta)), rep('rho', length(rho))) 
+par = rep(MY_PARS, each = nrow(combined_post_medians))
 
 # merge to df
 df <- data.frame(posterior_medians, par, agent)
-
-# ATTENTION: temporary solution for outlier
-df = df[df$posterior_medians > -100 & df$posterior_medians < 30000 ,]
 
 # define funtion for plotting
 plot_posterior_medians <- function(df, ylabel = 'Posterior Median', legend = TRUE, my_tag = ''){
@@ -132,7 +121,8 @@ plot_posterior_medians <- function(df, ylabel = 'Posterior Median', legend = TRU
 # 3 plots for 3 parameters
 p1 = plot_posterior_medians(df[df$par == 'beta',], legend = FALSE, my_tag = 'B')
 p2 = plot_posterior_medians(df[df$par == 'rho',], legend = FALSE, my_tag = 'C')
-p3 = plot_posterior_medians(df[df$par == 'phi',], ylabel = '', legend = FALSE, my_tag = 'D')
+p3 = plot_posterior_medians(df[df$par == 'alpha_h',], ylabel = '', legend = FALSE, my_tag = 'D')
+#p4 = plot_posterior_medians(df[df$par == 'phi',], ylabel = '', legend = FALSE, my_tag = 'E')
 
 # to look at median values 
 # df %>%
@@ -153,37 +143,34 @@ df %>%
 ### get posterior predictive values###
 ######################################
 
-# set working dir to dir where R-file resides
-setwd(file.path(dirname(rstudioapi::getSourceEditorContext()$path)))
+# # set working dir to dir where R-file resides
+# setwd(file.path(dirname(rstudioapi::getSourceEditorContext()$path)))
+# 
+# setwd('../')
 
-setwd('../')
-
-# CONFIG
-
-MY_LABELS = c('SM+EP')
-
-# colors
-my_clrs_yct <- c("#808080", "#ADD8E6", "#808080", "#ADD8E6")
-
-RNN_INSTANCES = 20
-N_WALKS = 3
-N_SUBS = 31
-
-N_SAMPLES = 500
-N_TRIALS = 300
+# 
+# 
+# # colors
+# my_clrs_yct <- c("#808080", "#ADD8E6", "#808080", "#ADD8E6")
+# 
+# RNN_INSTANCES = 20
+# N_WALKS = 3
+# N_SUBS = 31
+# 
+# N_SAMPLES = 500
+# N_TRIALS = 300
 
 # initialize matrix
-rnn_accuracy = matrix(NA, nrow = RNN_INSTANCES * N_WALKS, ncol = length(MY_MODELS))
-human_accuracy = matrix(NA, nrow = N_SUBS, ncol = length(MY_MODELS))
+rnn_accuracy = rep(NA, RNN_INSTANCES * N_WALKS)
+human_accuracy = rep(NA, N_SUBS)
 
 # RNNS
 
 for (id in c(0:(RNN_INSTANCES-1))){
   for (w in c(1:N_WALKS)){
-    for (m in c(1:length(MY_MODELS))){
-      
+
       # load stanfit
-      load(paste0(STAN_PATH, sprintf(RNN_STRING, MY_MODELS[m], id, w)))
+      load(paste0(STAN_PATH, sprintf(RNN_STRING, MY_MODEL, id, w)))
       # load predicted choices
       df = as.data.frame(stanfit$stanfit)
       pred_choices = as.matrix(df[,startsWith(names(df), 'predicted_choices')])
@@ -197,8 +184,7 @@ for (id in c(0:(RNN_INSTANCES-1))){
       is_predicted = t(pred_choices) == obs_choices # transpose needed
       is_predicted = t(is_predicted) # reverse transpose
       # get accuracy over all posterior samples and trials
-      rnn_accuracy[(w-1)*RNN_INSTANCES + id + 1, m] = mean(is_predicted)
-    }
+      rnn_accuracy[(w-1)*RNN_INSTANCES + id + 1] = mean(is_predicted)
   }
 }
 
@@ -208,7 +194,7 @@ for (sub in c(1:(N_SUBS))){
   for (m in c(1:length(MY_MODELS))){
     
     # load stanfit
-    load(paste0(STAN_PATH, sprintf(HUMAN_STRING, MY_MODELS[m], sub)))
+    load(paste0(STAN_PATH, sprintf(HUMAN_STRING, MY_MODEL, sub)))
     # load predicted choices
     df = as.data.frame(stanfit$stanfit)
     pred_choices = as.matrix(df[,startsWith(names(df), 'predicted_choices')])
@@ -222,16 +208,16 @@ for (sub in c(1:(N_SUBS))){
     is_predicted = t(pred_choices) == obs_choices # transpose needed
     is_predicted = t(is_predicted) # reverse transpose
     # get accuracy over all posterior samples and trials
-    human_accuracy[sub, m] = mean(is_predicted)
+    human_accuracy[sub] = mean(is_predicted)
   }
 }
 
 ### plotting
 
 # create plotting df
-accuracy = c(as.vector(human_accuracy),as.vector(rnn_accuracy))
-agent = c(rep('Human', N_SUBS*length(MY_MODELS)),rep('RNN', RNN_INSTANCES*N_WALKS*length(MY_MODELS)))
-model = c(rep(MY_MODELS, each=N_SUBS), rep(MY_MODELS, times = N_WALKS*RNN_INSTANCES))
+accuracy = c(human_accuracy,rnn_accuracy)
+agent = c(rep('Human', N_SUBS),rep('RNN', RNN_INSTANCES*N_WALKS))
+model = c(rep(MY_MODEL, each=N_SUBS), rep(MY_MODEL, times = N_WALKS*RNN_INSTANCES))
 model = as.factor(model)
 levels(model) = MY_LABELS
 # merge to df
@@ -287,7 +273,7 @@ setwd('../')
 # plot into grid
 plot_grid(ppred_plot, p1, p2,p3, labels = c('', '', ''), ncol = 2)
 # save
-ggsave("plots/figure_4.png",   dpi = 600,  width = 15, height = 10, unit = 'in')
+ggsave("plots/figure_4_SM_DP.png",   dpi = 600,  width = 15, height = 10, unit = 'in')
 
 
 

@@ -28,7 +28,7 @@ rnn_file_string = 'stan_fit_m_%s_d_lstm2_a2c_nh_48_lr_0_0001_n_u_p_0_5_ew_0_vw_0
 model_ids = c(1:21)
 
 human_ids = c(1:31)
-rnn_ids = c(0:19) # CHANGE LATER
+rnn_ids = c(0:29)
 n_walks = 3
 n_trials = 300
 

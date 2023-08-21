@@ -15,17 +15,17 @@ library(BayesFactor)
 # ggplot2::theme_update(plot.tag = element_text(face = "bold", colour = "black"))
 
 STAN_PATH = 'data/intermediate_data/modeling/modeling_fits/'
-
-MY_MODEL =  18
+# 18 =  SM+DP, 21 = SM+EDP
+MY_MODEL =  21
 my_clrs_yct <- c("#808080", "#ADD8E6", "#808080", "#ADD8E6")
 
 RNN_INSTANCES = 30
 N_WALKS = 3
 N_SUBS = 31
 
-MY_PARS = c('beta', 'rho', 'alpha_h') # must be the same name as pars in stanfit
+MY_PARS = c('beta', 'rho', 'alpha_h', 'phi') # must be the same name as pars in stanfit
 N_SAMPLES = 500 # Number of samples for posterior predictives
-MY_LABELS = c('SM+DP')
+MY_LABELS = c('SM+EDP')
 
 RNN_STRING = 'stan_fit_m_%s_d_lstm2_a2c_nh_48_lr_0_0001_n_u_p_0_5_ew_0_vw_0_5_dr_0_5_res_d_f_p_0_1_rt_con_a_4_n_300_te_50000_id_%s_test_b_daw_p_%s_id_1.Rdata'
 HUMAN_STRING = 'stan_fit_m_%s_d_chakroun_placebo_human_bandit_data_id_%s.RData'
@@ -54,14 +54,14 @@ colnames(post_medians_human) = MY_PARS
 
 
 for (id in c(1:(N_SUBS))){
-  for (m in c(1:length(MY_MODELS))){
+  # for (m in c(1:length(MY_MODELS))){
     
     load(paste0(STAN_PATH, sprintf(HUMAN_STRING, MY_MODEL, id)))
     
     mcmc = rstan::extract(stanfit$stanfit, pars = MY_PARS)
     post_medians_human[id, ] = unlist(lapply(mcmc, median))
-    
-  }
+  #   
+  # }
 }
 
 ### plot
@@ -122,7 +122,7 @@ plot_posterior_medians <- function(df, ylabel = 'Posterior Median', legend = TRU
 p1 = plot_posterior_medians(df[df$par == 'beta',], legend = FALSE, my_tag = 'B')
 p2 = plot_posterior_medians(df[df$par == 'rho',], legend = FALSE, my_tag = 'C')
 p3 = plot_posterior_medians(df[df$par == 'alpha_h',], ylabel = '', legend = FALSE, my_tag = 'D')
-#p4 = plot_posterior_medians(df[df$par == 'phi',], ylabel = '', legend = FALSE, my_tag = 'E')
+p4 = plot_posterior_medians(df[df$par == 'phi',], ylabel = '', legend = FALSE, my_tag = 'E')
 
 # to look at median values 
 # df %>%
@@ -191,7 +191,7 @@ for (id in c(0:(RNN_INSTANCES-1))){
 # Human
 
 for (sub in c(1:(N_SUBS))){
-  for (m in c(1:length(MY_MODELS))){
+  # for (m in c(1:length(MY_MODELS))){
     
     # load stanfit
     load(paste0(STAN_PATH, sprintf(HUMAN_STRING, MY_MODEL, sub)))
@@ -209,7 +209,7 @@ for (sub in c(1:(N_SUBS))){
     is_predicted = t(is_predicted) # reverse transpose
     # get accuracy over all posterior samples and trials
     human_accuracy[sub] = mean(is_predicted)
-  }
+  # }
 }
 
 ### plotting

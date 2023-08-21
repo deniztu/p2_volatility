@@ -30,7 +30,7 @@ def tf_function(id_):
                  'classes/bandits/Daw2006_payoffs2.csv',
                  'classes/bandits/Daw2006_payoffs3.csv']
     
-    entropies = [0, 0.05, 'linear']
+    entropies = [0]
     
     
     for e in entropies:
@@ -46,14 +46,14 @@ def tf_function(id_):
                             , punish = True)
         
         nnet = nn.neural_network(bandit = train_mab
-                            , noise = 'none'
+                            , noise = 'update-dependant'
                             , discount_rate = 0.5
                             , value_loss_weight= 0.5
                             , entropy_loss_weight = e
-                            , rnn_type = 'rnn'
+                            , rnn_type = 'lstm2'
                             , noise_parameter = 0.5
                             , learning_algorithm = 'a2c'
-                            , n_iterations = 50000
+                            , n_iterations = 100000
                             , model_id= id_
                             , n_hidden_neurons = 48)
         
@@ -72,7 +72,7 @@ def tf_function(id_):
             
 if __name__ == '__main__':
 
-    ids = [15]#range(16, 30)
+    ids = range(14)
 
     start = time.perf_counter()
     

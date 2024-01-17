@@ -9,6 +9,6 @@ added_noise_rnn_state_1 - added_noise_rnn_state_N_HIDDEN: noise added to hidden 
 entropy_loss_weight: entropy loss weight in the loss function
 value_loss_weight: value loss weight in the loss function
 accuracy: binary indicator whether action with highest reward was chosen
-is_switch: binary indicitor whether current choice is different than previous choice
+is_switch: binary indicator whether current choice is different than previous choice
 
  

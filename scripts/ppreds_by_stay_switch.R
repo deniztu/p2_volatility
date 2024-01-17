@@ -12,8 +12,8 @@ library(Hmisc)
 
 # CONFIG
 
-MY_MODELS = c(15)
-MY_LABELS = c('SM+EP')
+MY_MODELS = c(21)
+MY_LABELS = c('SM+EDP')
 
 # colors
 my_clrs_yct <- c("#808080", "#ADD8E6", "#808080", "#ADD8E6")

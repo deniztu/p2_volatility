@@ -108,7 +108,7 @@ class AC_Network():
         self.prev_actions_onehot   = tf.one_hot(self.prev_actions, n_arms, dtype=tf.float32) #changed
         self.timestep              = tf.placeholder(shape=[None,1], dtype=tf.float32)
         input_                     = tf.concat([self.prev_rewardsch, self.prev_actions_onehot],1)
-
+        
         self.actions             = tf.placeholder(shape=[None], dtype=tf.int32)
         self.actions_onehot      = tf.one_hot(self.actions, n_arms, dtype=tf.float32)       
 

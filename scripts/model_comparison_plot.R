@@ -183,7 +183,7 @@ plot2_x_ticks <- c(
   "3" = "SM+BP", "4" = "SM+TP",
   "5" = "SM+B", "6" = "SM+T",
   "7" = "SM+DP", "8" = "SM+BDP",
-  "9" = "SM+DPT", "10"="SM",
+  "9" = "SM+TDP", "10"="SM",
   "11"="SM+E", "12"="SM+T",
   "13"="SM+B", "14" ="SM+P",
   "15"="SM+EP", "16" ="SM+TP",
@@ -206,15 +206,12 @@ ggsave('plots/model_comparison_dp.png', dpi = 600,  width = 10, height = 6)
 #ggsave('plots/model_comparison.png', width = 20, height = 15, units = "in")
 
 
-# model_names1 = c("SM","SM+P","SM+BP", "SM+TP", "SM+B", "SM+T", 
-#                                   "SM_KM", "SM+E", "SM+T", "SM+B", "SM+P", "SM+EP", "SM+TP", "SM+BP")
-# 
-# 
-# # check stats
-# df1$model = model_names1
-# print('RNN')
-# print(df1)
-# 
-# df2$model = model_names1
-# print('Human')
-# print(df2)
+
+# check stats
+df1$model = plot2_x_ticks
+print('RNN')
+print(df1)
+
+df2$model = plot2_x_ticks
+print('Human')
+print(df2)

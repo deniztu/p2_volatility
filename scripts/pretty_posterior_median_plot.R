@@ -82,7 +82,7 @@ par = rep(MY_PARS, each = nrow(combined_post_medians))
 df <- data.frame(posterior_medians, par, agent)
 
 # define funtion for plotting
-plot_posterior_medians <- function(df, ylabel = 'Posterior Median', legend = TRUE, my_tag = ''){
+plot_posterior_medians <- function(df, ylabel = 'Posterior Median', xlabel = '', legend = TRUE, my_tag = ''){
   
   if (legend){
     legend = c(0.8, 0.8)
@@ -95,34 +95,47 @@ plot_posterior_medians <- function(df, ylabel = 'Posterior Median', legend = TRU
     aes(x = par,
         y = posterior_medians,
         fill = agent) + 
-    geom_point(aes(color = agent), 
+    geom_point(aes(fill = agent), 
                position = position_jitterdodge(jitter.width = .15, # to sepreate jitter into their group.
                                                dodge.width = .3), 
-               size = 5, 
-               alpha = 0.2,
-               show.legend = F) +
+               size = 3, 
+               alpha = 0.9,
+               show.legend = F,
+               colour = 'white',
+               pch = 21,
+               stroke = 2
+               ) +
     geom_boxplot(aes(color = agent),
                  width = .3, 
                  outlier.shape = NA,
-                 alpha = 0) + 
+                 alpha = 0,
+                 colour = c('black', 'blue'),
+                 lwd = 1) +
     theme_bw() +
-    scale_colour_manual(values=my_clrs_yct)+
+    scale_fill_manual(values=my_clrs_yct)+
     theme(legend.position = legend,
           legend.title = element_blank(),
           legend.text = element_text(size=20, face = "bold"),
-          axis.title.x=element_blank(),
-          axis.text.x =element_text(size=20, face="bold"),
+          axis.title.x=element_text(size=20, face="bold"),
+          axis.text.x =element_blank(),
           axis.title.y = element_text(size=20, face="bold"),
           axis.text.y = element_text(size = 20, face="bold"),
           plot.tag = element_text(size = 40, face = "bold")) + 
-    ylab(ylabel) + labs(tag = my_tag)
+    ylab(ylabel) +
+    xlab(xlabel) +
+    labs(tag = my_tag)
 } 
 
-# 3 plots for 3 parameters
-p1 = plot_posterior_medians(df[df$par == 'beta',], legend = FALSE, my_tag = 'B')
-p2 = plot_posterior_medians(df[df$par == 'rho',], legend = FALSE, my_tag = 'C')
-p3 = plot_posterior_medians(df[df$par == 'alpha_h',], ylabel = '', legend = FALSE, my_tag = 'D')
-p4 = plot_posterior_medians(df[df$par == 'phi',], ylabel = '', legend = FALSE, my_tag = 'E')
+# parameter plots
+p1 = plot_posterior_medians(df[df$par == 'beta',], legend = FALSE,
+                            my_tag = 'B', xlabel = bquote(beta))
+p2 = plot_posterior_medians(df[df$par == 'rho',], ylabel = '',
+                            legend = FALSE, my_tag = 'C',
+                            xlabel = bquote(rho))
+p3 = plot_posterior_medians(df[df$par == 'alpha_h',], ylabel = '', legend = FALSE,
+                            my_tag = 'D', xlabel = bquote(alpha[h]))
+p4 = plot_posterior_medians(df[df$par == 'phi',], ylabel = '', legend = FALSE,
+                            my_tag = 'E', xlabel = expression(phi))
 
 # to look at median values 
 # df %>%
@@ -137,6 +150,14 @@ df %>%
             , min = min(posterior_medians)
             , max = max(posterior_medians))
 
+# bayesian t-test (two samples)
+ttestBF(formula = posterior_medians ~ agent, data = df[df$par=='beta',])
+ttestBF(formula = posterior_medians ~ agent, data = df[df$par=='alpha_h',])
+ttestBF(formula = posterior_medians ~ agent, data = df[df$par=='rho',])
+ttestBF(formula = posterior_medians ~ agent, data = df[df$par=='phi',])
+
+# bayesian t-test (one samples)
+ttestBF(df[df$par=='phi'& df$agent=='RNN' ,'posterior_medians'], mu = 0)
 
 
 ######################################
@@ -207,8 +228,10 @@ for (sub in c(1:(N_SUBS))){
     # transform predict choice matrix to boolean: True is predicted, else False
     is_predicted = t(pred_choices) == obs_choices # transpose needed
     is_predicted = t(is_predicted) # reverse transpose
+    # insert NAN for missing values (choice = 0)
+    is_predicted[obs_choices==0] = NaN
     # get accuracy over all posterior samples and trials
-    human_accuracy[sub] = mean(is_predicted)
+    human_accuracy[sub] = mean(is_predicted, na.rm = TRUE)
   # }
 }
 
@@ -227,21 +250,28 @@ ppred_plot <- ggplot(df) +
   aes(x = model,
       y = accuracy,
       fill = agent) + 
-  geom_point(aes(color = agent), 
+  geom_point(aes(fill = agent), 
              position = position_jitterdodge(jitter.width = .15, # to sepreate jitter into their group.
                                              dodge.width = .3), 
-             size = 5, 
-             alpha = 0.2,
-             show.legend = F) +
+             size = 3, 
+             alpha = 0.9,
+             show.legend = F,
+             colour = 'white',
+             pch = 21,
+             stroke = 2
+  ) +
   geom_boxplot(aes(color = agent),
                width = .3, 
                outlier.shape = NA,
-               alpha = 0) + 
+               alpha = 0,
+               #colour = c('black', 'blue'),
+               lwd = 1) + 
   theme_bw() +
-  scale_colour_manual(values=my_clrs_yct)+
-  theme(legend.position = c(0.8, 0.8),
+  scale_fill_manual(values=my_clrs_yct)+
+  scale_color_manual(values=c('black', 'blue'))+
+  theme(legend.position = c(0.7, 0.2),
         legend.title = element_blank(),
-        legend.text = element_text(size=20, face = "bold"),
+        legend.text = element_text(size=15, face = "bold"),
         axis.title.x=element_blank(),
         axis.text.x =element_text(size=20, face="bold"),
         axis.title.y = element_text(size=20, face="bold"),
@@ -271,10 +301,29 @@ setwd(file.path(dirname(rstudioapi::getSourceEditorContext()$path)))
 setwd('../')
 
 # plot into grid
-plot_grid(ppred_plot, p1, p2,p3, labels = c('', '', ''), ncol = 2)
+plot_grid(ppred_plot, p1, p2,p3,p4, labels = c('', '', ''), nrow = 1)
 # save
-ggsave("plots/figure_4_SM_DP.png",   dpi = 600,  width = 15, height = 10, unit = 'in')
+# width 15, height 10
+ggsave("plots/figure_4_SM_EDP.png",   dpi = 1000,  width = 20, height = 4, unit = 'in')
 
+##########################
+### save df for jasp   ###
+##########################
+
+agent = c(rep("RNN", nrow(post_medians_rnn)), rep("Human", nrow(post_medians_human)))
+
+
+jasp_list = list(accuracy= c(rnn_accuracy,human_accuracy), 
+                 beta = combined_post_medians[,'beta'],
+                 rho = combined_post_medians[,'rho'],
+                 alpha_h = combined_post_medians[,'alpha_h'],
+                 phi = combined_post_medians[,'phi'],
+                 agent = agent)
+
+jasp_df = data.frame(jasp_list)
+
+write.csv(jasp_df, 'data/intermediate_data/jasp_analysis/post_median_data.csv',
+          row.names = F)
 
 
 

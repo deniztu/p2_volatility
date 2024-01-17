@@ -36,7 +36,7 @@ for e in entropies:
     
             train_mab = bc.bandit(bandit_type = 'restless'
                                 , arms = 4
-                                , num_steps = 300
+                                , num_steps = 100
                                 , reward_type = 'continuous'
                                 , noise_sd = 0.1
                                 , punish = True)
@@ -46,12 +46,12 @@ for e in entropies:
                                 , discount_rate = 0.5
                                 , value_loss_weight= 0.5
                                 , entropy_loss_weight = 0.05#e
-                                , rnn_type = 'rnn'
+                                , rnn_type = 'lstm2'
                                 , noise_parameter = 0.5
-                                , learning_algorithm = 'reinforce'
-                                , n_iterations = 50000
-                                , model_id= 15
-                                , n_hidden_neurons = 48)
+                                , learning_algorithm = 'a2c'
+                                , n_iterations = 500
+                                , model_id= 999
+                                , n_hidden_neurons = 10)
             
             # train the rnn
             nnet.train()

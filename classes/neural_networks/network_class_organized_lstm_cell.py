@@ -106,9 +106,18 @@ class AC_Network():
         self.prev_actions_onehot   = tf.one_hot(self.prev_actions, n_arms, dtype=tf.float32 , name="v3") #changed
         self.timestep              = tf.placeholder(shape=[None,1], dtype=tf.float32, name="v4")
         input_                     = tf.concat([self.prev_rewardsch, self.prev_actions_onehot],1, name="v5")
+        
+        print('INPUT_')
+        print(np.shape(input_))
 
         self.actions             = tf.placeholder(shape=[None], dtype=tf.int32, name = "v6")
         self.actions_onehot      = tf.one_hot(self.actions, n_arms, dtype=tf.float32,  name = "v7")
+        
+        ##print('ACTIONS')
+        ##print(np.shape(self.actions))
+        
+        ##print('ACTIONS_ONEHOT')
+        ##print(np.shape(self.actions_onehot))
         
         if entropy_loss_weight == 'linear':
             self.entropy_loss_weight = tf.placeholder("float", None,  name = "v8") ####Change IP
@@ -116,8 +125,8 @@ class AC_Network():
         else: 
             self.entropy_loss_weight = entropy_loss_weight
             
-        print('entropy loss weight')
-        print(self.entropy_loss_weight)
+        # ##print('entropy loss weight')
+        # ##print(self.entropy_loss_weight)
 
         #Recurrent network for temporal dependencies
         nb_units = n_hidden_neurons
@@ -144,30 +153,30 @@ class AC_Network():
             # add added_noises_means for reinforce algorithm
             self.added_noises_means = tf.convert_to_tensor(np.zeros(48))
             
-            #print('shapes of ht and ct')
-            # print(np.shape(lstm_h))
-            # print(np.shape(lstm_c))
+            ###print('shapes of ht and ct')
+            # ##print(np.shape(lstm_h))
+            # ##print(np.shape(lstm_c))
             
-            #print('sliced c')
-            # print(np.shape(lstm_c[:1, :]))
+            ###print('sliced c')
+            # ##print(np.shape(lstm_c[:1, :]))
             
             # added noise, does it work?
             self.h_noise    = tf.placeholder(tf.float32, [None, nb_units])   
             
             self.state_out = (lstm_c[:1, :], lstm_h[:1, :])
-            #print('lstm state out')
-            # print(np.shape(self.state_out))
-            # print(np.shape(self.state_out[0]))
-            # print(np.shape(self.state_out[1]))
+            ###print('lstm state out')
+            # ##print(np.shape(self.state_out))
+            # ##print(np.shape(self.state_out[0]))
+            # ##print(np.shape(self.state_out[1]))
             
             self.true_state_out = lstm_h[:1, :]
             rnn_out = tf.reshape(lstm_outputs, [-1, nb_units])
             
-            #print('lstm rnn_out (lstm_outputs) before reshape')
-            # print(np.shape(lstm_outputs))
+            ###print('lstm rnn_out (lstm_outputs) before reshape')
+            # ##print(np.shape(lstm_outputs))
             
-            #print('lstm rnn_out')
-            # print(np.shape(rnn_out))
+            ###print('lstm rnn_out')
+            # ##print(np.shape(rnn_out))
             
         if rnn_type == 'lstm2' and noise == 'update-dependant':
             
@@ -175,59 +184,94 @@ class AC_Network():
             
             # IMPLEMENT SCAN HERE
             lstm_cell_b = tf.contrib.rnn.BasicLSTMCell(nb_units,state_is_tuple=True) #hacky
+            
+            ##print('lstm_cell_b')
+            ##print(np.shape(lstm_cell_b))
+            
 
             lstm_cell = own_lstm_cell.LSTM(n_arms+1, nb_units, add_noise)
+            
+            ##print('lstm_cell')
+            ##print(np.shape(lstm_cell))
+            
             c_init = np.zeros((1, nb_units), np.float32)
             h_init = np.zeros((1, nb_units), np.float32)
+            
+            ##print('c_init & h_init')
+            ##print(np.shape(c_init))
+            
             self.state_init = [h_init, c_init]
+            
+            ##print('self.state_init')
+            ##print(np.shape(self.state_init))
+            
             c_in = tf.placeholder(tf.float32, [1, nb_units])
             h_in = tf.placeholder(tf.float32, [1, nb_units])
+            
+            ##print('c_in & h_in')
+            ##print(np.shape(c_in))
+            
             self.state_in = tf.tuple([h_in, c_in])
+            
+            ##print('self.state_in')
+            ##print(np.shape(self.state_in))
             
             self.h_noise    = tf.placeholder(tf.float32, [None, nb_units]) 
             all_noises      = self.h_noise
             
-            # print('all_noises')
-            # print(np.shape(all_noises))
+            ##print('all_noises')
+            ##print(np.shape(all_noises))
+            
+            # ##print('all_noises')
+            # ##print(np.shape(all_noises))
             
             all_inputs = tf.concat((input_, all_noises), axis = 1) 
+            ##print('all_inputs')
+            #print(np.shape(all_inputs))
+            
             rnn_in = tf.transpose(tf.expand_dims(all_inputs, [0]), [1,0,2])
             
-            # print('rnn_in')
-            # print(np.shape(rnn_in))
+            #print('rnn_in')
+            #print(np.shape(rnn_in))
+            
+            # #print('rnn_in')
+            # #print(np.shape(rnn_in))
             
             
             # states, self.added_noises_means = tf.scan(lstm_cell.step, rnn_in, initializer=(self.state_in))
             states = tf.scan(lstm_cell.step, rnn_in, initializer=(self.state_in))
+            
+            #print('states')
+            #print(np.shape(states))
             
             # add added_noises_means for reinforce algorithm
             self.added_noises_means = tf.convert_to_tensor(np.zeros(48))
             
             lstm_h, lstm_c = states
             
-            # print('lstm_h')
-            # print(np.shape(lstm_h))
+            #print('lstm_h')
+            #print(np.shape(lstm_h))
             
-            # print('lstm_c')
-            # print(np.shape(lstm_c))
+            #print('lstm_c')
+            #print(np.shape(lstm_c))
 
             self.state_out = (lstm_h[0,:, :], lstm_c[0,:, :]) # Deniz: changed to get [1, n_hidden] vs [?, 1, n_hidden] which throws error in recursion in work
             
-            # print('state_out')
-            # print(np.shape(self.state_out))
-            # print('state_out lstm_h')
-            # print(np.shape(self.state_out[0]))
-            # print('state_out lstm_c')
-            # print(np.shape(self.state_out[1]))
+            #print('state_out')
+            #print(np.shape(self.state_out))
+            #print('state_out lstm_h')
+            #print(np.shape(self.state_out[0]))
+            #print('state_out lstm_c')
+            #print(np.shape(self.state_out[1]))
             
             self.true_state_out = lstm_h[:1, :]
-            # print('true state_out')
-            # print(np.shape(self.true_state_out))
+            #print('true state_out')
+            #print(np.shape(self.true_state_out))
             
             rnn_out        = tf.reshape(lstm_h, [-1, nb_units])
             
-            # print('rnn_out')
-            # print(np.shape(rnn_out))
+            #print('rnn_out')
+            #print(np.shape(rnn_out))
         
         if rnn_type == 'rnn': 
     
@@ -252,24 +296,24 @@ class AC_Network():
             else:
                 rnn_in = tf.transpose(tf.expand_dims(input_, [0]),[1,0,2])
                 
-            # print('input_ shape')
-            # print(np.shape(input_))
+            # #print('input_ shape')
+            # #print(np.shape(input_))
                 
-            # print('rnn_in shape findling')
-            # print(np.shape(rnn_in))
+            # #print('rnn_in shape findling')
+            # #print(np.shape(rnn_in))
             
             states, self.added_noises_means    = tf.scan(lstm_cell.step, rnn_in, initializer=(self.state_in, 0.))
             
-            # print('findling states')
-            # print(np.shape(states))
+            # #print('findling states')
+            # #print(np.shape(states))
             
             lstm_h         = states[:,0]
-            # print('lstm_h shape')
-            # print(np.shape(lstm_h))
+            # #print('lstm_h shape')
+            # #print(np.shape(lstm_h))
             
             self.state_out = states[:1,0]
-            # print('state_out shape findling')
-            # print(np.shape(self.state_out))
+            # #print('state_out shape findling')
+            # #print(np.shape(self.state_out))
             
             self.true_state_out = self.state_out
             rnn_out        = lstm_h
@@ -279,16 +323,25 @@ class AC_Network():
         self.policy = slim.fully_connected(rnn_out, n_arms, activation_fn=tf.nn.softmax,
             weights_initializer=normalized_columns_initializer(0.01), biases_initializer=None)   #changed   
         
-        # print('softmax')
-        # print(np.shape(self.policy))
+        #print('softmax')
+        #print(np.shape(self.policy))
         
         self.advantages = tf.placeholder(shape=[None],dtype=tf.float32)
+        
+        #print('self.advantages')
+        #print(np.shape(self.advantages))
                 
         self.responsible_outputs = tf.reduce_sum(self.policy * self.actions_onehot, [1])
+        
+        #print('self.responsible_outputs')
+        #print(np.shape(self.responsible_outputs))
        
         self.entropy     = - tf.reduce_sum(self.policy * tf.log(self.policy + 1e-7))
         
         self.policy_loss = - tf.reduce_sum(tf.log(self.responsible_outputs + 1e-7) * self.advantages)
+        
+        #print('self.policy_loss')
+        #print(np.shape(self.policy_loss))
         
         self.loss_entropy = self.entropy * self.entropy_loss_weight
        
@@ -298,11 +351,20 @@ class AC_Network():
                 activation_fn=None,
                 weights_initializer=normalized_columns_initializer(1.0),
                 biases_initializer=None) # added AC
+            
+            #print('self.value')
+            #print(np.shape(self.value))
                         
             self.target_v = tf.placeholder(shape=[None],dtype=tf.float32)# added AC
             
+            #print('self.target_v')
+            #print(np.shape(self.target_v))
+            
             self.value_loss = 0.5 * tf.reduce_sum(tf.square(self.target_v - tf.reshape(self.value,[-1]))) # add value loss weight
-
+            
+            #print('tf.reshape(self.value,[-1])')
+            #print(np.shape(tf.reshape(self.value,[-1])))
+            
             self.loss        = value_loss_weight *self.value_loss + self.policy_loss - self.loss_entropy # add entropy_loss_weight
             
         if learning_algorithm == 'reinforce':
@@ -359,20 +421,62 @@ class Worker():
         train method
         '''        
         rollout           = np.array(rollout)
+        
+        #print('rollout ')
+        #print(np.shape(rollout ))
+        
         actions           = rollout[:,0]
+        
+        #print('actions  ')
+        #print(np.shape(actions  ))
+            
+            
         rewards_ch        = rollout[:,1]
+        
+        #print('rewards_ch)')
+        #print(np.shape(rewards_ch))
+            
+            
         timesteps         = rollout[:,2]
+        
+        #print('timesteps ')
+        #print(np.shape(timesteps ))
+            
         h_noises          = rollout[:,3]
-
+        
+        #print('h_noises')
+        #print(np.shape(h_noises))
+        
         prev_actions      = [2] + actions[:-1].tolist()    # initialize one-hot vector representing the previous chosen action of episode to 0
+        #print('prev_actions')
+        #print(np.shape(prev_actions))
+        
+        
         prev_rewards_ch   = [0] + rewards_ch[:-1].tolist() # initialize previous observed reward of episode to 0
+        
+        #print('prev_rewards_ch')
+        #print(np.shape(prev_rewards_ch))
+        
         
         if self.learning_algorithm == 'a2c':
             values = rollout[:,4]
             
+            #print('values')
+            #print(np.shape(values))
+            
             self.value_plus = np.asarray(values.tolist() + [bootstrap_value])
+            #print('self.value_plus')
+            #print(np.shape(self.value_plus))
+            
+            
             advantages = rewards_ch + gamma * self.value_plus[1:] - self.value_plus[:-1]
+            #print('advantages1')
+            #print(np.shape(advantages))
+            
+            
             advantages = discount(advantages,gamma) # added AC
+            #print('advantages2')
+            #print(np.shape(advantages))
             
         
         
@@ -381,11 +485,19 @@ class Worker():
         
         self.rewards_plus  = np.asarray(rewards_ch.tolist() + [bootstrap_value])
         discounted_rewards = discount(self.rewards_plus,gamma)[:-1]
-
+        
+        #print('self.rewards_plus')
+        #print(np.shape(self.rewards_plus))
+        
+        #print('discounted_rewards')
+        #print(np.shape(discounted_rewards))
        
         if self.rnn_type == 'lstm' and self.learning_algorithm == 'a2c' or self.rnn_type == 'lstm2' and self.learning_algorithm == 'a2c':
             
             rnn_state = self.ac_network.state_init ###change
+            
+            #print('rnn_state')
+            #print(np.shape(rnn_state))
             
             
             if self.entropy_loss_weight == 'linear':
@@ -632,14 +744,14 @@ class Worker():
         # take episode count if model was already trained
         if os.path.exists(self.model_path):
             list_of_files = glob.glob(self.model_path + '/*')
-            print('###############')
+            #print('###############')
             list_of_files = np.array(list_of_files)[[not "checkpoint" in s for s in list_of_files]] # list ignoring checkpoint file
-            print(list_of_files)
+            #print(list_of_files)
             latest_file = max(list_of_files, key=os.path.getctime)
-            print(latest_file)
+            #print(latest_file)
             x = latest_file
             episode_count = int(x.split('-')[1].split('.')[0]) # get episode_count from latest file
-            print(episode_count)
+            #print(episode_count)
         else:
             episode_count = 0
 
@@ -848,10 +960,10 @@ class Worker():
                         os.makedirs(self.model_path)
                     
                     saver.save(sess, self.model_path+'/model-'+str(episode_count)+'.cptk')
-                    print("Saved Model Episodes: {}".format(str(episode_count)))
+                    #print("Saved Model Episodes: {}".format(str(episode_count)))
                     mean_reward    = np.mean(self.episode_rewards[-50:])
-                    print('mean_reward')
-                    print(mean_reward)
+                    #print('mean_reward')
+                    #print(mean_reward)
                 
                 if train == True:
                     if episode_count % self.n_iterations == 0: # stopping criterion
@@ -991,15 +1103,15 @@ class neural_network:
             # if model exists start from the last checkpoint
             if os.path.exists(self.model_path):
                 
-                print('Resuming Training Model: {}'.format(self.model_name))
+                #print('Resuming Training Model: {}'.format(self.model_name))
                 ckpt = tf.train.get_checkpoint_state(self.model_path)
-                print(ckpt)
+                #print(ckpt)
                 self.saver.restore(sess,ckpt.model_checkpoint_path)
                 # train
                 self.worker.work(self.discount_rate,sess,self.saver,train)
                 
             else: 
-                print('Training Model: {}'.format(self.model_name))
+                #print('Training Model: {}'.format(self.model_name))
                 # initialise variables
                 sess.run(tf.global_variables_initializer())
                 # train
@@ -1088,10 +1200,10 @@ class neural_network:
                     self.saver   = tf.train.Saver(max_to_keep=5)
                 
                     with tf.Session() as sess:
-                        # print('Testing Model: {}'.format(self.model_name))
+                        # #print('Testing Model: {}'.format(self.model_name))
                         ckpt = tf.train.get_checkpoint_state(self.model_path)
                         
-                        print(self.model_path)
+                        #print(self.model_path)
                         
                         self.saver.restore(sess,ckpt.model_checkpoint_path)
                         
@@ -1127,8 +1239,8 @@ class neural_network:
                         
                         df_list.append(df)
                         
-                        print('ACCURACY')
-                        print(np.mean(df['accuracy']))
+                        #print('ACCURACY')
+                        #print(np.mean(df['accuracy']))
                         
                         
                     
@@ -1154,7 +1266,7 @@ class neural_network:
             pickle.dump(mult_ind_df, outfile)
             outfile.close()
             
-            print('FINISHED')
+            #print('FINISHED')
 
     def reset(self):
         tf.reset_default_graph()

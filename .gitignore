@@ -4,24 +4,29 @@ __pycache__
 todo.txt
 .Rhistory
 
-plots
-results
-documentation
+plots/*
 saved_models/*
 tensorboard/*
-data/intermediate_data/modeling/*
-data/intermediate_data/fixed_bandits/*
-data/intermediate_data/pca/*
+data/human_raw_data/*
 data/rnn_raw_data/*
+data/intermediate_data/fixed_bandits/*
+data/intermediate_data/jasp_analysis/*
+data/intermediate_data/modeling/*
+data/intermediate_data/modeling/modeling_fits/*
+data/intermediate_data/modeling/preprocessed_data_for_modeling/*
+
 
 # exception
+!plots/.gitkeep
 !saved_models/.gitkeep
 !tensorboard/.gitkeep
 !scripts/.gitkeep
 !saved_models/.gitkeep
-!save_models/.gitkeep
+!data/human_raw_data/.gitkeep
 !data/rnn_raw_data/.gitkeep
-!data/intermediate_data/modeling/.gitkeep
 !data/intermediate_data/fixed_bandits/.gitkeep
-!data/intermediate_data/pca/.gitkeep
+!data/intermediate_data/jasp_analysis/.gitkeep
+!data/intermediate_data/modeling/.gitkeep
+!data/intermediate_data/modeling/modeling_fits/.gitkeep
+!data/intermediate_data/modeling/preprocessed_data_for_modeling/.gitkeep
 !scripts/.gitkeep

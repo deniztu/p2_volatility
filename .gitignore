@@ -11,7 +11,6 @@ data/human_raw_data/*
 data/rnn_raw_data/*
 data/intermediate_data/fixed_bandits/*
 data/intermediate_data/jasp_analysis/*
-data/intermediate_data/modeling/*
 data/intermediate_data/modeling/modeling_fits/*
 data/intermediate_data/modeling/preprocessed_data_for_modeling/*
 
@@ -26,7 +25,6 @@ data/intermediate_data/modeling/preprocessed_data_for_modeling/*
 !data/rnn_raw_data/.gitkeep
 !data/intermediate_data/fixed_bandits/.gitkeep
 !data/intermediate_data/jasp_analysis/.gitkeep
-!data/intermediate_data/modeling/.gitkeep
 !data/intermediate_data/modeling/modeling_fits/.gitkeep
 !data/intermediate_data/modeling/preprocessed_data_for_modeling/.gitkeep
 !scripts/.gitkeep

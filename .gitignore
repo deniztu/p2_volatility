@@ -28,3 +28,4 @@ data/intermediate_data/modeling/preprocessed_data_for_modeling/*
 !data/intermediate_data/modeling/modeling_fits/.gitkeep
 !data/intermediate_data/modeling/preprocessed_data_for_modeling/.gitkeep
 !scripts/.gitkeep
+.Rproj.user

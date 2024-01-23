@@ -4,16 +4,19 @@ This repository contains code for the following paper:
 
 PAPER CITATION
 
-## Installation
+## Install Requirements
 
-The required packages are in requirements.txt. Using Virtual Environments, they can be installed as follows:
+### Python
+
+First install anaconda, then open Anaconda Prompt and navigate to this repository. 
+
+Then recreate the environment of this project by typing the following in Anaconda Prompt:
 
 ```bash
-pip install virtualenv
-virtualenv venv
-source venv/bin/activate
-pip install -r requirements.txt
+conda env create -f environment.yml
 ```
+
+You should now have a virtual environment called ``RNNExplore`` with all the necessary dependancies regarding python. 
 
 ## Directory Structure
 

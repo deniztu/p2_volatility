@@ -7,10 +7,7 @@ require(rstan)
 require(arrow)
 require(stringr)
 require(reticulate)
-# use_condaenv(condaenv = 'rnn', required = TRUE)
-# use_python("C:/Users/Deniz/anaconda3/envs/rnn/python.exe", required = TRUE)
-# conda_install('pyarrow')
-# py_config()
+
 
 # stan options
 options(mc.cores = parallel::detectCores())

@@ -27,7 +27,7 @@ def tf_function(id_):
 #for id_ in range(16, 30):
     
     #entropies = [0]
-    num_hidden_units = [80]
+    num_hidden_units = [10]
     for nh in num_hidden_units:
         
         train_mab = bc.bandit(bandit_type = 'restless'
@@ -45,7 +45,7 @@ def tf_function(id_):
                             , rnn_type = 'lstm2'
                             , noise_parameter = 0.5
                             , learning_algorithm = 'a2c'
-                            , n_iterations = 50000
+                            , n_iterations = 500
                             , model_id= id_
                             , n_hidden_neurons = nh)
         
@@ -71,7 +71,7 @@ def tf_function(id_):
 
 if __name__ == '__main__':
 
-    ids =range(24, 30)
+    ids =[99]#range(24, 30)
 
     start = time.perf_counter()
     

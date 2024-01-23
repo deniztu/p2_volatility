@@ -5,7 +5,6 @@ setwd(file.path(dirname(rstudioapi::getSourceEditorContext()$path)))
 setwd('../')
 
 library(ggplot2)
-library(PupillometryR)
 library(cowplot)
 library(BayesFactor)
 

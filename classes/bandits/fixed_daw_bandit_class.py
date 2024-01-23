@@ -5,7 +5,6 @@ Created on Thu Apr  8 14:49:31 2021
 @author: Deniz
 """
 
-import pandas as pd
 import numpy as np
 
 class load_daw_bandit:

@@ -1,8 +1,6 @@
 import numpy as np
 import random 
-import time
 from scipy.stats import truncnorm as truncnorm
-import pdb
 
 class bandit:
     '''

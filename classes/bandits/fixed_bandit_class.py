@@ -1,13 +1,11 @@
 import pandas as pd
 import numpy as np
 import os
-import pdb 
 
 # use bandit_class to create bandits in create_bandit
 from classes.bandits import bandit_class as bc 
 import zipfile
 from helpers import dot2_
-from helpers import zip2csv
 
 class load_bandit:
     '''

@@ -5,8 +5,6 @@ Created on Wed Nov 17 14:31:34 2021
 @author: Deniz
 """
 
-import numpy as np
-
 from helpers import feather_class
 from helpers import dot2_
 
@@ -19,7 +17,6 @@ TRAIN_SD = ['0_1']
 IDS = 20
 RUNS = 1
 RINS = 0
-# TEST_SDS = np.arange(.02, .34, .02)
 TEST_SDS = [1, 2, 3]
 REWARD_TYPE = ''
 RNN_TYPE = 'lstm2_a2c'

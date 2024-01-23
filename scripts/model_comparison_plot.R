@@ -11,10 +11,7 @@ setwd('../')
 # load packages
 library(loo)
 library(rstan)
-library(Hmisc)
 library(ggplot2)
-library(ggpattern)
-library(tidyverse)
 library(ggpubr)
 
 ###########

@@ -8,7 +8,7 @@ PAPER CITATION
 
 ### Python
 
-First install anaconda, then open Anaconda Prompt and navigate to this repository. 
+Install anaconda, then open Anaconda Prompt and navigate to this repository. 
 
 Then recreate the environment of this project by typing the following in Anaconda Prompt:
 
@@ -17,6 +17,12 @@ conda env create -f environment.yml
 ```
 
 You should now have a virtual environment called ``RNNExplore`` with all the necessary dependancies regarding python. 
+
+### R
+
+Install R (This work is based on version 4.1.1) and R Studio (This work is based on version 2021.09.1)
+
+Then double click on 
 
 ## Directory Structure
 

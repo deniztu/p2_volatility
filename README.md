@@ -27,6 +27,13 @@ Then double click on ``p1_generalization.Rproj``, this will open R Studio, then 
 ```bash
 renv::restore()
 ```
+Alternatively, you can load the necessary packages from an .RData file and install the them manually. 
+
+```R
+load("r_packages.RData")
+install.packages(r_pckgs)
+```
+
 
 ## Directory Structure
 

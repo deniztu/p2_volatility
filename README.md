@@ -27,7 +27,7 @@ Then double click on ``p1_generalization.Rproj``, this will open R Studio, then 
 ```r
 renv::restore()
 ```
-Alternatively, you can load the necessary packages from an .RData file and install the them manually. 
+Alternatively, you can load the necessary packages from an .RData file and install them manually. 
 
 ```R
 load("r_packages.RData")

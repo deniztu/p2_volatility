@@ -4,7 +4,11 @@
     "Repositories": [
       {
         "Name": "CRAN",
-        "URL": "https://packagemanager.posit.co/cran/latest"
+        "URL": "https://cloud.r-project.org"
+      },
+      {
+        "Name": "stan",
+        "URL": "https://mc-stan.org/r-packages"
       }
     ]
   },
@@ -167,7 +171,7 @@
       "Package": "StanHeaders",
       "Version": "2.26.22",
       "Source": "Repository",
-      "Repository": "CRAN",
+      "Repository": "stan",
       "Requirements": [
         "R",
         "RcppEigen",
@@ -1268,7 +1272,7 @@
       "Package": "rstan",
       "Version": "2.26.22",
       "Source": "Repository",
-      "Repository": "CRAN",
+      "Repository": "stan",
       "Requirements": [
         "BH",
         "R",

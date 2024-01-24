@@ -22,7 +22,7 @@ You should now have a virtual environment called ``RNNExplore`` with all the nec
 
 Install R (This work is based on version 4.1.1) and R Studio (This work is based on version 2021.09.1)
 
-Then double click on 
+Then double click on ``p1_generalization.Rproj``, this will trigger renv and install all dependancies regarding R. 
 
 ## Directory Structure
 

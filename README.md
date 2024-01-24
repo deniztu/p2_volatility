@@ -22,7 +22,11 @@ You should now have a virtual environment called ``RNNExplore`` with all the nec
 
 Install [R](https://www.r-project.org/) (This work is based on version 4.1.1) and [R Studio](https://posit.co/download/rstudio-desktop/) (This work is based on version 2021.09.1)
 
-Then double click on ``p1_generalization.Rproj``, this will trigger renv and install all dependancies regarding R. 
+Then double click on ``p1_generalization.Rproj``, this will open R Studio, then in the console type the following to install all R dependancies: 
+
+```bash
+renv::restore()
+```
 
 ## Directory Structure
 

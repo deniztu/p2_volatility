@@ -24,7 +24,7 @@ Install [R](https://www.r-project.org/) (This work is based on version 4.1.1) an
 
 Then double click on ``p1_generalization.Rproj``, this will open R Studio, then in the console type the following to install all R dependancies: 
 
-```bash
+```r
 renv::restore()
 ```
 Alternatively, you can load the necessary packages from an .RData file and install the them manually. 

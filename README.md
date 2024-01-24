@@ -8,7 +8,7 @@ PAPER CITATION
 
 ### Python
 
-First install anaconda, then open Anaconda Prompt and navigate to this repository. 
+Install [Anaconda](https://www.anaconda.com/download), then open Anaconda Prompt and navigate to this repository. 
 
 Then recreate the environment of this project by typing the following in Anaconda Prompt:
 
@@ -16,7 +16,17 @@ Then recreate the environment of this project by typing the following in Anacond
 conda env create -f environment.yml
 ```
 
-You should now have a virtual environment called ``RNNExplore`` with all the necessary dependancies regarding python. 
+You should now have a virtual environment called ``RNNExplore`` with all the necessary dependancies regarding Python. 
+
+### R
+
+Install [R](https://www.r-project.org/) (This work is based on version 4.1.1) and [R Studio](https://posit.co/download/rstudio-desktop/) (This work is based on version 2021.09.1)
+
+Then double click on ``p1_generalization.Rproj``, this will open R Studio, then in the console type the following to install all R dependancies: 
+
+```bash
+renv::restore()
+```
 
 ## Directory Structure
 

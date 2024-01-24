@@ -954,7 +954,7 @@
     },
     "nlme": {
       "Package": "nlme",
-      "Version": "3.1-152",
+      "Version": "3.1-162",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -964,7 +964,7 @@
         "stats",
         "utils"
       ],
-      "Hash": "35de1ce639f20b5e10f7f46260730c65"
+      "Hash": "0984ce8da8da9ead8643c5cbbb60f83e"
     },
     "nloptr": {
       "Package": "nloptr",

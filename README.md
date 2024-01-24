@@ -8,7 +8,7 @@ PAPER CITATION
 
 ### Python
 
-Install [Anaconda](https://docs.anaconda.com/free/anaconda/install/index.html), then open Anaconda Prompt and navigate to this repository. 
+Install [Anaconda](https://www.anaconda.com/download), then open Anaconda Prompt and navigate to this repository. 
 
 Then recreate the environment of this project by typing the following in Anaconda Prompt:
 

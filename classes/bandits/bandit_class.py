@@ -2,32 +2,47 @@ import numpy as np
 import random 
 from scipy.stats import truncnorm as truncnorm
 
-class bandit:
-    '''
-    Class to define a bandit
+class Bandit:
+    """Class to define a bandit
     
-    Input: 
-        bandit_type: string, either 'stationary' or 'restless' or 'meta_volatility' or 'daw_et_al_2006'
-        arms: int, number of bandit arms
-        num_steps: int, number of trials
-        dependant: bool, should reward probs of arms be dependant
-        reward_type: 'continuous' or 'binary'
-        punish: bool, if reward_type == 'binary': non-rewards are negative, if reward_type == 'continuous': rewards are mean centered! 
-
-        if bandit_type == 'stationary':
-            reward_rate: float, probability of observing reward
+    Parameters
+    ----------
+    bandit_type : str
+        Type of bandit, choose from 'stationary', 'restless', 'meta_volatility', 'daw_et_al_2006'.
+    arms : int
+        Number of bandit arms.
+    num_steps : int
+        Number of trials.
+    dependant : bool
+        Should reward probabilities of arms be dependent.
+    reward_type : str
+        Type of rewards, choose from 'continuous' or 'binary'(default).
+    punish : bool
+        If reward_type == 'binary': non-rewards = -1, if reward_type == 'continuous': rewards are mean-centered!
+    
+    For 'stationary' bandits:
+        reward_rate : float
+            Probability of observing reward.
+    
+    For 'restless' bandits:
+        noise_sd : float
+            Standard deviation of the Gaussian noise (mu = 0, sd = noise_sd). Default is 2.8.
+    
+    For 'meta_volatility' bandits:
+        Restless bandits with noise_sd drawn from [0.02 - 0.2].
         
-        if bandit_type == 'restless':
-            noise_sd: float, sd of the gaussian noise (mu = 0, sd = noise_sd)
-            
-        if bandit_type == 'meta_volatility':
-            restless bandits with noise_sd drawn from [0.02 - 0.2]
+    Methods
+    -------
+    generate_task: Generates bandit task based on the specified bandit type and parameters
     
-    Output: 
-        rewards: numpy.ndarray, shape[num_steps, arms]
-        p_rew: numpy.ndarray, probability of reward per arm
-            
-    '''
+    Returns
+    -------
+    Bandit class instance
+        
+    Notes
+    -----
+    The method initializes a Bandit instance with the specified parameters.
+    """
     def __init__(self
                  , bandit_type
                  , arms
@@ -58,14 +73,37 @@ class bandit:
         if self.bandit_type == 'daw_et_al_2006':
             self.bandit_parameter = noise_sd
             
-        if self.bandit_type == 'fixed_ratio':
-            self.bandit_parameter = reward_rate
-            
-        if self.bandit_type == 'variable_ratio':
-            self.bandit_parameter = reward_rate
-
-            
     def generate_task(self):
+        
+        """Generate bandit task based on the specified bandit type and parameters.
+      
+        Returns
+        -------
+        tuple
+            Tuple containing rewards (numpy.ndarray) and reward probabilities (numpy.ndarray).
+      
+        Notes
+        -----
+        The method generates a bandit task based on the specified bandit type and parameters. It handles different
+        scenarios such as restless and stationary bandits, with or without dependencies between arms.
+      
+        - For restless bandits:
+            - If independent (`dependant` is False), it generates independant noisy reward probabilities for each arm over trials.
+            - If dependent (`dependant` is True), it generates anti-correlated reward probabilities for each arm over trials.
+      
+        - For stationary bandits:
+            - If independent (`dependant` is False), it randomly assigns the best bandit and generates rewards based
+              on a fixed probability for the best arm and 0.5 for other arms.
+            - If dependent (`dependant` is True), it generates dependent reward probabilities with the best arm having
+              a fixed probability.
+      
+        - For meta-volatility bandits, it generates restless bandits with sampled standard deviation from uniform distribution U[0.02,0.2].
+      
+        - For Daw et al. 2006 bandits, it simulates a task with a decay parameter and diffusion noise (According to Daw et al., 2006).
+      
+        Returns a tuple containing rewards and reward probabilities.
+      
+        """
     
         if self.bandit_type == 'restless' and self.dependant == False:
             
@@ -198,8 +236,7 @@ class bandit:
                     r_probs[t,:] = r_probs[t-1,:]+noise
                     
             
-            # calculate rewards        
-            
+            # calculate rewards
             rewards      = np.zeros([self.num_steps, self.arms])
             
             if self.reward_type == 'binary':
@@ -282,7 +319,6 @@ class bandit:
             
             # decay parameter
             lambda_ = 0.9836
-            # lambda_ = 0.9 # modify, because otherwise pay_off 'sticks' to bounds with higher sigma_d
             # decay center
             theta = 50
             # sigma (mu sd)
@@ -325,55 +361,6 @@ class bandit:
             centered_pay_off_arr = pay_off_arr - np.mean(pay_off_arr)
                 
             return(centered_pay_off_arr, pay_off_arr)
-        
-        if self.bandit_type == 'fixed_ratio':
-            
-            #pdb.set_trace()
-            
-            # randomly assign rewarded bandit
-            # rand_int     = np.random.randint(self.arms)
-            
-            # initialise obtained reward prob array
-            r_probs = np.zeros([self.num_steps, self.arms])
-            
-            # rewarded bandit is rewarded with fixed ratio, punished otherwise
-            # unrewarded bandit has reward = 0 
-            r_probs[:]   = 0
-            r_probs[:, 1]   = - 1/8
-            
-            r_probs[::int(np.reciprocal(self.bandit_parameter)), 1] = 1
-            
-            # extinction phase
-            r_probs[int(self.num_steps/2):, 1] = - 1/8
-            
-            rewards = r_probs
-                
-            return rewards, r_probs
-        
-        if self.bandit_type == 'variable_ratio':
-            
-            # randomly assign bandit for rewarded bandit
-            # rand_int     = np.random.randint(self.arms)
-            
-            # initialise obtained reward prob array
-            r_probs = np.zeros([self.num_steps, self.arms])
-            
-            # rewarded bandit is rewarded with fixed ratio, punished otherwise
-            # unrewarded bandit has reward = 0 
-            r_probs[:]   = 0
-            r_probs[:, 1]   = - 1/8
-            
-            # select reward with variable ratio
-            sample = r_probs[:int(self.num_steps/2), 1]
-            sample[::int(np.reciprocal(self.bandit_parameter))] = 1
-            r_probs[:int(self.num_steps/2), 1] = random.sample(list(sample),int(self.num_steps/2))
-            
-            # extinction phase all bandits not rewarded
-            # r_probs[int(self.num_steps/2):] = 0
-            
-            rewards = r_probs
-                
-            return rewards, r_probs
         
         else: 
             print('This functionality is not implemented yet')

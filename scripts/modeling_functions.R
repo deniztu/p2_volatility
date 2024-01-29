@@ -18,15 +18,30 @@ rstan_options(auto_write = TRUE)
 # for Stan models                                                        #
 ##########################################################################
 
-preprocess_rnn_data_for_modeling <- function(reward_type
-                                             , rnn_type
-                                             , file_string # added
-                                             , is_noise
+### arguments
+
+# rnn_type (str): with following format '[lstm_cell]_[learning_algorithm]'
+# lstm_cell: 'rnn','lstm' or 'lstm2'
+# learning_algorithm: a2c (advantage-actor-critic) or rei (REINFORCE)
+
+# file_string (str): formatted file_string of rnn test data
+# add %s as placeholders for rnn_type, train_sd, id and bandit parameter
+# e.g., '%s_nh_48_lr_0_0001_n_u_p_0_5_ew_0_vw_0_5_dr_0_5_res_d_f_p_%s_rt_con_a_4_n_300_te_50000_id_%s_test_b_daw_p_%s'
+
+# num_instances (int): number of rnn instances (function runs 0 to num_instances-1)
+
+# train_sds (str or float): training sd of the RNN (e.g., 0.1 or 0_1)
+
+# sd_range (int or float): test sd of the test bandit, can be a vector 
+
+# path_to_save_formatted_data (str): path to save preprocessed RData files relative to the root directory
+
+preprocess_rnn_data_for_modeling <- function(rnn_type
+                                             , file_string
                                              , num_instances
                                              , train_sds
                                              , sd_range
                                              , path_to_save_formatted_data = 'data/intermediate_data/modeling/preprocessed_data_for_modeling'){
-# for (id_ in c(0)){
 for (id_ in c(0:(num_instances-1))){
       for (train_sd in train_sds){
           for (sd_ in sd_range){
@@ -36,9 +51,6 @@ for (id_ in c(0:(num_instances-1))){
             test_sd = gsub('[.]', '_', sd_)
             
             # load feathered python file in R
-            is_noise = tolower(substring(is_noise, 1, 1))
-            # is_noise = 'n' #added
-            
             file_name = sprintf(file_string, rnn_type, train_sd, id_, test_sd)
             
             df = arrow::read_feather(paste0(path_to_save_formatted_data,'/',file_name))
@@ -55,35 +67,35 @@ for (id_ in c(0:(num_instances-1))){
             choices = df$choice+1
             
             
-            # get rewards TODO check for binary vs continuous
+            # get chosen rewards
             
-            if (reward_type == ''){ # changed
+            # if (reward_type == ''){
               
-              rewards = df[,c('p_rew_1', 'p_rew_2', 'p_rew_3', 'p_rew_4')]
-              
-              # get chosen rewards
-              chosen_rewards = vector()
-              
-              for (row in c(1:nrow(rewards))){
-                chosen_rewards = c(chosen_rewards, rewards[row, choices[row]])
-              }
-              
-              chosen_rewards = unlist(chosen_rewards)
+            rewards = df[,c('p_rew_1', 'p_rew_2', 'p_rew_3', 'p_rew_4')]
+            
+            # get chosen rewards
+            chosen_rewards = vector()
+            
+            for (row in c(1:nrow(rewards))){
+              chosen_rewards = c(chosen_rewards, rewards[row, choices[row]])
             }
             
-            if (reward_type == 'binary'){
-              
-              rewards = df[,c('p_rew_1', 'p_rew_2', 'p_rew_3', 'p_rew_4')]
-              
-              # get chosen rewards
-              chosen_rewards = vector()
-              
-              for (row in c(1:nrow(rewards))){
-                chosen_rewards = c(chosen_rewards, rewards[row, choices[row]])
-              }
-              
-              chosen_rewards = unlist(chosen_rewards)
-            }
+            chosen_rewards = unlist(chosen_rewards)
+            #}
+            
+            # if (reward_type == 'binary'){
+            # 
+            #   rewards = df[,c('p_rew_1', 'p_rew_2', 'p_rew_3', 'p_rew_4')]
+            # 
+            #   # get chosen rewards
+            #   chosen_rewards = vector()
+            # 
+            #   for (row in c(1:nrow(rewards))){
+            #     chosen_rewards = c(chosen_rewards, rewards[row, choices[row]])
+            #   }
+            # 
+            #   chosen_rewards = unlist(chosen_rewards)
+            # }
             
             # get choices in matrix[nRuns, nTrials]
             choices = matrix(choices, nrow = nRuns, ncol = nTrials, byrow = TRUE)
@@ -98,7 +110,6 @@ for (id_ in c(0:(num_instances-1))){
             # save formatted data
             res = list(model = preprocessed_file_name_, choices = choices, chosen_rewards = chosen_rewards, rewards = rewards
                        , nRuns = nRuns, nTrials = nTrials)
-            # TODO: get name convention for preprocessed data
             save(file = sprintf('%s/pp_data_%s.RData', path_to_save_formatted_data, preprocessed_file_name_),res)
             
           }
@@ -236,46 +247,62 @@ get_trials_not_chosen <- function(pp_file = res){
 # posterior samples of stan models                                       #
 ##########################################################################
 
-# Input:
-# stan_model: stan model to fit to data
-# path_to_data: path_to_preprocessed_data
-# Output: 
-# save .RData object with stanfit object (posterior samples)
+### Arguments
+
+# stan_model (int): indicator for stan model to fit to data (see legend below)
+# path_to_preprocessed_data (str): path where preprocessed RData files reside relative to the root directory
+# preprocessed_file_name (str): file name of the preprocessed data
+# path_to_save_restults (str): path to save posterior samples relative to the root directory
+# cognitive_model_directory (str): path where stan models reside
+# subject_ids (int): subject id to append to the final file name (not used, default: 1) 
+# n_iter (int): number of posterior samples (including warmup)
+# n_chains (int): number of chains in mcmc
+
 
 #--------------------------------------------------#
 #               stan_model legend                  # 
 #--------------------------------------------------#
-# 1: ms_ql_1lr.stan
-# 2: ms_ql_1lr_p.stan
-# 3: ms_ql_1lr_p_u.stan
-# 4: ms_ql_1lr_p_t.stan
-# 5: ms_ql_1lr_u.stan
-# 6: ms_ql_1lr_t.stan
-# 7: ms_ql_1lr_dp.stan
-# 8: ms_ql_1lr_dp_u.stan
-# 9: ms_ql_1lr_dp_t.stan
+# ms = multiple subjects, single subject fits with one stan file
+# ql_1lr = q-learning, 1 learning rate
+# kalman = kalman filter updating
+# p = perseveration
+# u = unique bandit heuristic
+# t = trial heuristic
+# e = kalman filter exploration
+# dp = decayed perseveration/higher order perseveration
 
-# 10: ms_kalman_model.stan
-# 11: ms_kalman_model_e.stan
-# 12: ms_kalman_model_t.stan
-# 13: ms_kalman_model_u.stan
-# 14: ms_kalman_model_p.stan
-# 15: ms_kalman_model_ep.stan
-# 16: ms_kalman_model_tp.stan
-# 17: ms_kalman_model_up.stan
-# 18: ms_kalman_model_dp.stan
-# 19: ms_kalman_model_u_dp.stan
-# 20: ms_kalman_model_t_dp.stan
-# 21: ms_kalman_model_e_dp.stan
+
+# 1: 'ms_ql_1lr.stan'
+# 2: 'ms_ql_1lr_p.stan'
+# 3: 'ms_ql_1lr_p_u.stan'
+# 4: 'ms_ql_1lr_p_t.stan'
+# 5: 'ms_ql_1lr_u.stan'
+# 6: 'ms_ql_1lr_t.stan'
+# 7: 'ms_ql_1lr_dp.stan'
+# 8: 'ms_ql_1lr_dp_u.stan'
+# 9: 'ms_ql_1lr_dp_t.stan'
+
+# 10: 'ms_kalman_model.stan'
+# 11: 'ms_kalman_model_e.stan'
+# 12: 'ms_kalman_model_t.stan'
+# 13: 'ms_kalman_model_u.stan'
+# 14: 'ms_kalman_model_p.stan'
+# 15: 'ms_kalman_model_ep.stan'
+# 16: 'ms_kalman_model_tp.stan'
+# 17: 'ms_kalman_model_up.stan'
+# 18: 'ms_kalman_model_dp.stan'
+# 19: 'ms_kalman_model_u_dp.stan'
+# 20: 'ms_kalman_model_t_dp.stan'
+# 21: 'ms_kalman_model_e_dp.stan'
+
+
 
 fit_model_to_rnn_data <- function(stan_models # vector of integers according to stan_model legend
                                   , path_to_preprocessed_data = 'data/intermediate_data/modeling/preprocessed_data_for_modeling'
                                   , preprocessed_file_name
                                   , path_to_save_results = 'data/intermediate_data/modeling/modeling_fits'
                                   , cognitive_model_directory = 'cognitive_models/'
-                                  , num_instances
-                                  , sd_range
-                                  , subject_ids # which subjects/runs to model
+                                  , subject_ids = 1 # which subjects/runs to model
                                   , n_iter = 4000 # number of iterations
                                   , n_chains = 2 # number of chains
 ){
@@ -283,17 +310,8 @@ fit_model_to_rnn_data <- function(stan_models # vector of integers according to 
   # inside R, source Python script
   # source_python("helpers.py")
   
-for (ins in c(num_instances-1)){
   for (subject_id in subject_ids){
-    for (sd_ in sd_range){
-     
-      # convert decimal point to '_'
-      sd_ = as.character(sd_)
-      sd_ = gsub('[.]', '_', sd_)
-      
-      # insert instance and sd
-      # preprocessed_file_name_ = sprintf(preprocessed_file_name, ins, sd_)
-      # file_name = 'pp_data_test_lstm_a2c_ew_0_05.RData'
+
       preprocessed_file_name_ = preprocessed_file_name
       
       
@@ -838,8 +856,6 @@ for (ins in c(num_instances-1)){
       }
     
     }
-  }
-}
 
 
 

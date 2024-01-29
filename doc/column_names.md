@@ -56,4 +56,15 @@ And following columns:
 - is_switch:
     binary indicator whether the agent switched actions during subsequent timesteps
 
+# Preprocessed data for modeling
+
+Saved by default to `data/intermediate_data/modeling/preprocessed_data_for_modeling/`
+
+Preprocessed data is a .RData file containing a `res` object, with following 6 elements
+- model: A string denoting the file name of the unprocessed file
+- choices: A 1 by n_trials array containing the choices of the agent
+- chosen_rewards: A 1 by n_trials array containing the rewards corresponding to choices
+- rewards: A n_trials by n_actions array containing the reward values of all actions (random walks)
+- nRuns: An integer indicating the number of subjects to fit in the stan model, can also be used to fit multiple runs for one agent
+- nTrials: An integer indicating the number of trials of the task
  

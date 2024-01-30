@@ -1,6 +1,6 @@
-###########################################
-# script does model comparison with WAIC  #
-###########################################
+#####################################################
+# script plots cognitive model comparison with WAIC #
+#####################################################
 
 # set working dir to dir where R-file resides
 setwd(file.path(dirname(rstudioapi::getSourceEditorContext()$path)))
@@ -18,10 +18,14 @@ library(ggpubr)
 # CONFIG  #
 ###########
 path_to_stanfit = 'data/intermediate_data/modeling/modeling_fits/'
+
+# file name with placeholders (%s) for model (int according to stan_model legend) and id
 human_file_string = 'stan_fit_m_%s_d_chakroun_placebo_human_bandit_data_id_%s.RData'
+
+# file name with placeholders (%s) for model (int according to stan_model legend), id and bandit parameter
 rnn_file_string = 'stan_fit_m_%s_d_lstm2_a2c_nh_48_lr_0_0001_n_u_p_0_5_ew_0_vw_0_5_dr_0_5_res_d_f_p_0_1_rt_con_a_4_n_300_te_50000_id_%s_test_b_daw_p_%s_id_1.RData'
 
-# see modeling_functions for mappings of numbers to cognitive models
+# specify cognitive models (see stan_model legend in scripts/modeling_function.R)
 model_ids = c(1:21)
 
 human_ids = c(1:31)
@@ -200,15 +204,14 @@ p3 = ggarrange(p1, p2, nrow = 2, ncol = 1)
 
 # save plot
 ggsave('plots/model_comparison_dp.png', dpi = 600,  width = 10, height = 6)
-#ggsave('plots/model_comparison.png', width = 20, height = 15, units = "in")
 
 
 
-# check stats
-df1$model = plot2_x_ticks
-print('RNN')
-print(df1)
-
-df2$model = plot2_x_ticks
-print('Human')
-print(df2)
+# # check stats
+# df1$model = plot2_x_ticks
+# print('RNN')
+# print(df1)
+# 
+# df2$model = plot2_x_ticks
+# print('Human')
+# print(df2)

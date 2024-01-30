@@ -1,3 +1,8 @@
+#############################################################################
+# script computes bayesian t-test based on the cumulative regret of agents  #
+# and and saves the effect size distribution                                #
+#############################################################################
+
 # set working dir to dir where R-file resides
 setwd(file.path(dirname(rstudioapi::getSourceEditorContext()$path)))
 
@@ -42,5 +47,5 @@ df = data.frame(samples[,'delta'])
 write.csv(df, "regret_t_test_delta_posterior.csv")
 
 # median
-median(samples[,'delta'])
+# median(samples[,'delta'])
 

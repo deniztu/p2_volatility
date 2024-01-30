@@ -42,13 +42,21 @@ p1_generalization
 │   README.md
 │   main.py
 │   helpers.py
-│   requirements.txt 
+|   .Rprofile
+|   .gitignore
+|   environment.yaml
+|   helpers.py
+|   p1_generalization.RData
+|   r_packages.RData
+|   renv.lock  
 │
 └───classes
 │   │
 │   └───bandits
-│   │
+│   │   
 │   └───neural_networks
+|       |
+|       └───rnns
 │   
 └───cognitive_models
 │
@@ -64,9 +72,19 @@ p1_generalization
 │   │   │   │    
 │   │   │   └───preprocessed_data_for_modeling
 │   │   │
-│   │   └───pca
+│   │   └───jasp_analysis
 │   │      
 │   └───rnn_raw_data
+│   │      
+│   └───human_raw_data
+│
+└───doc
+│
+└───notebooks
+│
+└───plots
+│
+└───renv
 │
 └───saved_models
 │
@@ -80,10 +98,13 @@ The repository contains:
 
 * ``main.py``: This is the main script, which can be used for training, testing and simulating the RNNs.
 * ``helpers.py``: contains classes/functions to handle .zip, .feather files and other helper functions
-* ``classes``: contains classes for simulating bandits and RNNs
+* ``classes``: contains classes for creating bandit tasks and RNNs
 * ``cognitive_models``: contains bayesian cognitive models written in STAN
-* ``data``: contrains RNN behavioural data, principle components of the RNNs and preprocessed data for cognitive modeling and posterior model fits.
-* ``saved_models``: contains trained RNNs
-* ``scripts``: contains functions used to apply cognitive models to RNNs
+* ``data``: contains RNN and human behavioural data, pregenerated bandits to test the RNNs, data to conduct bayesian analysis with JASP, preprocessed data for cognitive modeling and posterior model fits.
+* ``saved_models``: contains trained RNN weights and biases
+* ``scripts``: contains scripts used in this project (see XXX)
+* ``notebooks``: contains jupyter notebooks used in this project (see XXX)
 * ``tensorboard``: contains saved files to plot RNN training logs in tensorboard
+* ``doc``: contains documentation and how-to guides for this project
+
 

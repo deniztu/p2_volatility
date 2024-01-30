@@ -102,7 +102,7 @@ The repository contains:
 * ``cognitive_models``: contains bayesian cognitive models written in STAN
 * ``data``: contains RNN and human behavioural data, pregenerated bandits to test the RNNs, data to conduct bayesian analysis with JASP, preprocessed data for cognitive modeling and posterior model fits.
 * ``saved_models``: contains trained RNN weights and biases
-* ``scripts``: contains scripts used in this project (see XXX)
+* ``scripts``: contains scripts used in this project (see [scripts_explanations.md](../main/doc/scripts_explanations.md))
 * ``notebooks``: contains jupyter notebooks used in this project (see [notebooks_explanations.md](../main/doc/notebooks_explanations.md))
 * ``tensorboard``: contains saved files to plot RNN training logs in tensorboard
 * ``doc``: contains documentation and how-to guides for this project

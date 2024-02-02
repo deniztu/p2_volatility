@@ -1,4 +1,43 @@
 # Training and testing RNNs
+
+```mermaid
+---
+title: Train & Test Workflow
+---
+flowchart TB
+
+A([Start]) --> B
+
+
+subgraph "Step 1"
+B{Train Daw?} --> |Yes| C[/Daw Bandit Files/]
+B --> |No| D{Fixed Bandits created?}
+D --> |Yes| E[/Fixed Bandit Files/]
+D --> |No| F[create_bandits.py]
+F --> E
+end
+
+
+
+subgraph "Step 2"
+C ~~~ G[main.py]
+E ~~~ G
+G --> H{Train?}
+H --> |Yes| I[`nn.train` method]
+I --> J[/Tensorboard Files/]
+I --> K[/Saved Model Files/]
+H --> |No| L[`nn.test` method]
+K --> L
+C --> L
+E --> L 
+L --> M[/RNN Test Files/]
+M --> O([End])
+end
+
+```
+
+
+
 0.	Make sure that the current working directory is the projects root directory
    
 1.	If you don’t test on daw walks, create fixed bandits

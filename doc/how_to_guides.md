@@ -6,8 +6,8 @@
   * This will save bandit tasks as zip files as specified in `path_to_save_bandits` argument
 
 2. Train and test RNNs
-* Open `p_main.py` and set the global variables accordingly
-* Save the script and run `p_main.py` (In Spyder: You have to run the file via the green run button, running selected code via F9 does not work with multiprocessing)
+* Open `main.py` and set the global variables accordingly
+* Save the script and run `main.py` (In Spyder: You have to run the file via the green run button, running selected code via F9 does not work with multiprocessing)
 
 3. Inspect files
 * Training progress will be saved in tensorboard and saved_models folders

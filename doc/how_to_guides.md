@@ -33,10 +33,10 @@ subgraph "Step 2"
 C ~~~ G[main.py]
 E ~~~ G
 G --> H{Train?}
-H --> |Yes| I[`nn.train` method]
+H --> |Yes| I[`nnet.train` method]
 I --> J[/Tensorboard Files <br/> <br/> in tensorboard /]
 I --> K[/Saved Model Files <br/> <br/> in saved_models /]
-H --> |No| L[`nn.test` method]
+H --> |No| L[`nnet.test` method]
 K --> L
 C --> L
 E --> L 
@@ -63,9 +63,9 @@ Make sure that the current working directory is the projects root directory
 ### Step 2 
 * Open `main.py` and set the global variables accordingly
 * Save the script and run `main.py` (In Spyder: You have to run the file via the green run button, running selected code via F9 does not work with multiprocessing)
-    *   `main.py` calls first the `nn.train` and then the `nn.test` method  
-         * `nn.train` saves training progress to the tensorboard and saved_models folder
-         * `nn.test` loads the trained RNN and the test bandit (task either daw or fixed bandits), resulting test files are saved to data/rnn_raw_data
+    *   `main.py` calls first the `nnet.train` and then the `nnet.test` method  
+         * `nnet.train` saves training progress to the tensorboard and saved_models folder
+         * `nnet.test` loads the trained RNN and the test bandit (task either daw or fixed bandits), resulting test files are saved to data/rnn_raw_data
        
 ## Example
 

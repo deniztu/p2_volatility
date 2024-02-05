@@ -71,7 +71,7 @@ Make sure that the current working directory is the projects root directory
        
 ## Example
 
-### Creating 10 runs of fixed bandits
+### Creating fixed bandits
 
 Running scripts/create_bandits.py with the following bandit settings...
 
@@ -81,7 +81,7 @@ will save following zip files to 'data/intermediate_data/fixed_bandits/'.
 
 ![image](https://github.com/deniztu/p1_generalization/assets/54143017/659d4cd7-a790-41c2-9c62-2940cf51d191)
 
-### Train 4 RNN agents with with different numbers of hidden units, entropy scaling
+### Train an test RNN agents
 
 Open `main.py` and set the following in the global variables section to train 4 RNNs (IDS) with 3 levels of hidden units (N_HIDDEN) and 3 levels of entropy scaling (ENTROPIES).
 

@@ -69,6 +69,32 @@ Make sure that the current working directory is the projects root directory
        
 ## Example
 
+### Creating 10 runs of fixed bandits
+
+Running scripts/create_bandits.py with the following bandit settings...
+
+![image](https://github.com/deniztu/p1_generalization/assets/54143017/2afaa795-d663-453a-a10e-7802cfe76328)
+
+will save following zip files to 'data/intermediate_data/fixed_bandits/'.
+
+![image](https://github.com/deniztu/p1_generalization/assets/54143017/659d4cd7-a790-41c2-9c62-2940cf51d191)
+
+### Train 4 RNN agents with with different numbers of hidden units, entropy scaling
+
+Open `main.py` and set the following in the global variables section. 
+
+![image](https://github.com/deniztu/p1_generalization/assets/54143017/0b117eaa-c93a-4726-874b-d53ee1a07c44)
+
+We will train 4 RNNs (IDS) with 3 levels of hidden units (N_HIDDEN) and 3 levels of entropy scaling (ENTROPIES)
+
+To test the RNN on fixed bandits created above, specify the following:
+
+![image](https://github.com/deniztu/p1_generalization/assets/54143017/85425e91-9fcb-432d-8af5-55588414a7e5)
+
+This makes sure, that we use the FIXED_BANDIT_PATH to load testing bandits after training (daw walks will be ignored)
+
+
+
 # Cognitive Modeling with human and RNN data
 0.	Preprocessing
     * Human data: Run `scripts/preprocess_human_data.R` 

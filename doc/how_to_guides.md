@@ -1,6 +1,8 @@
-# Training and testing RNNs
+# Training and testing RNNs Workflow
 
 The following guides the user through the workflow of training and testing RNNs in this project. This workflow is based on first making sure that test bandit tasks exist (Step 1) and then test trained RNN agents on them (Step 2). For an high level overview consult the data flow charts below. At the end you can find text explaining the workflow and examples. 
+
+## Flowchart
 
 ```mermaid
 ---
@@ -46,12 +48,12 @@ end
 
 ```
 
-## Explanation
+### Explanations
 
-### Step 0	
+#### Step 0	
 Make sure that the current working directory is the projects root directory
 
-### Step 1 
+#### Step 1 
 * Do you want to test on daw or fixed bandits (e.g., predefined bandits created by you)?
     * If yes: Make sure, that daw bandit files are in classes/bandits (e.g., "Daw2006_payoffs1.csv")
     * If no: Do fixed bandits already exist?
@@ -60,7 +62,7 @@ Make sure that the current working directory is the projects root directory
              *  Run scripts/create_bandits.py in your IDE (e.g., Spyder) with global variables set accordingly
              *  This will save bandit tasks as zip files to data/intermediate_data/fixed_bandits
  
-### Step 2 
+#### Step 2 
 * Open `main.py` and set the global variables accordingly
 * Save the script and run `main.py` (In Spyder: You have to run the file via the green run button, running selected code via F9 does not work with multiprocessing)
     *   `main.py` calls first the `nnet.train` and then the `nnet.test` method  

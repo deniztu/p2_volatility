@@ -81,19 +81,22 @@ will save following zip files to 'data/intermediate_data/fixed_bandits/'.
 
 ### Train 4 RNN agents with with different numbers of hidden units, entropy scaling
 
-Open `main.py` and set the following in the global variables section. 
+Open `main.py` and set the following in the global variables section to train 4 RNNs (IDS) with 3 levels of hidden units (N_HIDDEN) and 3 levels of entropy scaling (ENTROPIES).
 
 ![image](https://github.com/deniztu/p1_generalization/assets/54143017/0b117eaa-c93a-4726-874b-d53ee1a07c44)
 
-We will train 4 RNNs (IDS) with 3 levels of hidden units (N_HIDDEN) and 3 levels of entropy scaling (ENTROPIES)
-
-To test the RNN on fixed bandits created above, specify the following:
+To test the RNN on fixed bandits created above, specify the following, to makes sure, that we load our fixed bandits after training (daw_walks will be ignored).
 
 ![image](https://github.com/deniztu/p1_generalization/assets/54143017/85425e91-9fcb-432d-8af5-55588414a7e5)
 
-This makes sure, that we use the FIXED_BANDIT_PATH to load testing bandits after training (daw walks will be ignored)
+Define the training bandit (beware that the number of arms have to match with the testing bandit!).
 
+![image](https://github.com/deniztu/p1_generalization/assets/54143017/e997c6f0-ad28-4537-bd46-0afc6ee26aeb)
 
+Specify neural network details (Here we train a LSTM with compuation noise for 50000 episodes).
+![image](https://github.com/deniztu/p1_generalization/assets/54143017/e9cf61c3-a4e2-415d-b7d9-9dc26683ca43)
+
+Now save `main.py` and run it in spyder with the run button. This will save training progress to tensorboard and the saved_models folder and resulting test files to data/rnn_raw_data. 
 
 # Cognitive Modeling with human and RNN data
 0.	Preprocessing

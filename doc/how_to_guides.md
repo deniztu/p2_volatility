@@ -2,6 +2,15 @@
 
 ```mermaid
 ---
+title: Legend
+---
+flowchart LR
+
+ID=([Start or End]) ~~~ ID1{Decision} ~~~ ID2[Process or Programm] ~~~ ID3[/ Input or Output /]
+```
+
+```mermaid
+---
 title: Train & Test Workflow
 ---
 flowchart TB

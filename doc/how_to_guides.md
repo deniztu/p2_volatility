@@ -10,9 +10,9 @@ A([Start]) --> B
 
 
 subgraph "Step 1"
-B{Train Daw?} --> |Yes| C[/Daw Bandit Files/]
+B{Train Daw?} --> |Yes| C[/Daw Bandit Files <br/> <br/> in classes/bandits/]
 B --> |No| D{Fixed Bandits created?}
-D --> |Yes| E[/Fixed Bandit Files/]
+D --> |Yes| E[/Fixed Bandit Files <br/> <br/> in data/intermediate_data/fixed_bandits/]
 D --> |No| F[create_bandits.py]
 F --> E
 end
@@ -24,13 +24,13 @@ C ~~~ G[main.py]
 E ~~~ G
 G --> H{Train?}
 H --> |Yes| I[`nn.train` method]
-I --> J[/Tensorboard Files/]
-I --> K[/Saved Model Files/]
+I --> J[/Tensorboard Files <br/> <br/> in tensorboard /]
+I --> K[/Saved Model Files <br/> <br/> in saved_models /]
 H --> |No| L[`nn.test` method]
 K --> L
 C --> L
 E --> L 
-L --> M[/RNN Test Files/]
+L --> M[/RNN Test Files  <br/> <br/> in data/rnn_raw_data /]
 M --> O([End])
 end
 

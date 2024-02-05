@@ -8,7 +8,6 @@ flowchart TB
 
 A([Start]) --> B
 
-
 subgraph "Step 1"
 B{Train Daw?} --> |Yes| C[/Daw Bandit Files <br/> <br/> in classes/bandits/]
 B --> |No| D{Fixed Bandits created?}

@@ -43,8 +43,9 @@ K --> L
 C --> L
 E --> L 
 L --> M[/RNN Test Files  <br/> <br/> in data/rnn_raw_data /]
-M --> O([End])
 end
+
+M --> O([End])
 
 ```
 
@@ -101,16 +102,54 @@ Specify neural network details (Here we train a LSTM with compuation noise for 5
 Now save `main.py` and run it in spyder with the run button. This will save training progress to tensorboard and the saved_models folder and resulting test files to data/rnn_raw_data. 
 
 # Cognitive Modeling with human and RNN data
-0.	Preprocessing
-    * Human data: Run `scripts/preprocess_human_data.R` 
-    * RNN data:
-        * Open `scripts/modeling_call.R`
-        * Run preprocess test files section in `modeling_call.R`
-    * Files (.RData files) are saved under `path_to_save_formatted_data` (default: 'data/intermediate_data/modeling/preprocessed_data_for_modeling')
-   
- 1. Model fit
-    *  Open `scripts/modeling_call.R`
-    *  RNN data: Run Fit RNN data section in in modeling_call.R
-    *  Human data: Run Fit human data section in in modeling_call.R
-    *  Files (.RData files) are saved under `path_to_save_results` (default: 'data/intermediate_data/modeling/modeling_fits’)
+
+The following guides the user through the workflow of modeling behavioral data in this project. This workflow is based on first preprocessing raw behavioural data if needed (Step 1) and then applying bayesian cognitive modeling via Stan. For an high level overview consult the data flow charts below. At the end you can find text explaining the workflow. 
+
+## Flowchart
+```mermaid
+flowchart TB
+ID1([Start]) --> ID2
+
+subgraph "Step 1"
+ID2{Preprocessing needed?} --> |Yes| ID3[preprocess_human_data.R]
+ID2 --> |Yes| ID4[modeling_call.R]
+ID2 --> |No| ID5[/ Preprocessed Files <br/> <br/> in data/intermediate_data/modeling/preprocessed_data_for_modeling /]
+ID3 --> ID5
+ID4 --> ID5
+ID6[/ Raw Human Data <br/> <br/> in data/raw_human_data /] --> ID3
+ID7[/ Raw RNN Data <br/> <br/> in data/raw_rnn_data  /] --> ID4
+end
+
+
+subgraph "Step 2"
+ID5 --> ID8[modeling_call.R]
+ID9[/Cognitive Models <br/> <br/> in cognitive_models/] --> ID8
+ID8 --> ID10[/ Modeling Fits <br/> <br/> in data/intermediate_data/modeling/modeling_fits /]
+end
+
+ID10 --> ID11([End])
+
+
+```
+
+
+
+### Explanations
+
+#### Step 1	
+Is preprocessing needed?
+ * If yes: Make sure, that preprocessed files are in data/intermediate_data/modeling/preprocessed_data_for_modeling
+ * If no: preprocess files   
+    * For human data use `scripts/preprocess_human_data.R`
+    * For RNN data use "preprocess test files" section in `modeling_call.R`
+    * Files (.RData files) are saved to `path_to_save_formatted_data` (default: 'data/intermediate_data/modeling/preprocessed_data_for_modeling')
+          
+#### Step 2	
+ *  Open `scripts/modeling_call.R` in R Studio
+ *  Fit RNN data: Run "Fit RNN data" section 
+ *  Fit human data: Run "Fit human data" section
+ *  Files (.RData files) are saved to `path_to_save_results` (default: 'data/intermediate_data/modeling/modeling_fits’)
+
+
+
     

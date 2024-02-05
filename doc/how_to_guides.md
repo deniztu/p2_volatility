@@ -1,5 +1,7 @@
 # Training and testing RNNs
 
+The following guides the user through the workflow of training and testing RNNs in this project. This workflow is based on first making sure that test bandit tasks exist (Step 1) and then test trained RNN agents on them (Step 2). For an high level overview consult the data flow charts below. At the end you can find text explaining the workflow and examples. 
+
 ```mermaid
 ---
 title: Legend
@@ -44,23 +46,27 @@ end
 
 ```
 
+## Explanation
 
+### Step 0	
+Make sure that the current working directory is the projects root directory
 
-0.	Make sure that the current working directory is the projects root directory
-
-Step 1: 
-* Do you want to train on daw or fixed bandits (e.g., predefined bandits created by you)?
-* If yes: Make sure, that daw bandit files are in classes/bandits (e.g., "Daw2006_payoffs1.csv")
-* If no: You have to create bandits with scripts/create_bandits.py
-   *  Run scripts/create_bandits.py in your IDE (e.g., Spyder) with global variables set accordingly
-   *  This will save bandit tasks as zip files to data/intermediate_data/fixed_bandits
+### Step 1 
+* Do you want to test on daw or fixed bandits (e.g., predefined bandits created by you)?
+    * If yes: Make sure, that daw bandit files are in classes/bandits (e.g., "Daw2006_payoffs1.csv")
+    * If no: Do fixed bandits already exist?
+        * If yes: Make sure, that fixed bandit zip files are in data/intermediate_data/fixed_bandits 
+        * If no:  Create fixed bandits with scripts/create_bandits.py
+             *  Run scripts/create_bandits.py in your IDE (e.g., Spyder) with global variables set accordingly
+             *  This will save bandit tasks as zip files to data/intermediate_data/fixed_bandits
  
-Step 2: 
+### Step 2 
 * Open `main.py` and set the global variables accordingly
 * Save the script and run `main.py` (In Spyder: You have to run the file via the green run button, running selected code via F9 does not work with multiprocessing)
-   * The `nn.train` method is called in `main.py`, which saves training progress to the tensorboard and saved_models folder
-   * After training is done, the `nn.test` method is called, which loads either daw or fixed bandits to test the RNN on them. Resulting test files are saved to data/rnn_raw_data (see ‘naming_conventions’ in the docs folder)
- 
+    *   `main.py` calls first the `nn.train` and then the `nn.test` method  
+         * `nn.train` saves training progress to the tensorboard and saved_models folder
+         * `nn.test` loads the trained RNN and the test bandit (task either daw or fixed bandits), resulting test files are saved to data/rnn_raw_data
+       
 ## Example
 
 # Cognitive Modeling with human and RNN data

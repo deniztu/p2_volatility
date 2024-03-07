@@ -17,12 +17,12 @@ import time    # Load for timing
 
 # Neural network variables
 # more variables can be changed in inputs to nn.neural_network
-N_HIDDEN = [11] #  (list of ints)number of hidden units
-ENTROPIES = [0] # (list of str or floats) use 'linear' for linear decreasing entropy from 1 to 0
-IDS = [199] # (list of ints) ids of the RNN instances to train and test
+N_HIDDEN = [48, 64, 80] #  (list of ints)number of hidden units
+ENTROPIES = [0, 0.05, 'linear'] # (list of str or floats) use 'linear' for linear decreasing entropy from 1 to 0
+IDS = [0,1,2,3] # (list of ints) ids of the RNN instances to train and test
 
 # Flag to whether train the RNN?
-TRAIN_RNN = False
+TRAIN_RNN = True
 
 # Flag to whether test daw walks (if False, fixed bandits will be tested)?
 TEST_DAW = False
@@ -34,6 +34,8 @@ daw_walks = ['classes/bandits/Daw2006_payoffs1.csv',
 
 # File name of a fixed bandit zip file, with train_sd and run placeholders ({})
 FIXED_BANDIT_PATH = 'fixed_res_rt_con_p_{}_a_4_n_300_run_{}.zip'
+
+TEST_SD = [0.1] 
 
 ###
 
@@ -66,13 +68,13 @@ def tf_function(id_):
                                      noise='update-dependant',
                                      discount_rate=0.5,
                                      value_loss_weight=0.5,
-                                     entropy_loss_weight='linear',# ent,
+                                     entropy_loss_weight= ent,
                                      rnn_type='lstm2',
                                      noise_parameter=0.5,
                                      learning_algorithm='a2c',
-                                     n_iterations=500,
-                                     model_id=199,#id_,
-                                     n_hidden_neurons=11)#nh)
+                                     n_iterations=50000,
+                                     model_id=id_,
+                                     n_hidden_neurons=nh)
             
             if TRAIN_RNN:
                 # Train the RNN instance
@@ -95,7 +97,7 @@ def tf_function(id_):
             else:
                 # Testing with fixed bandits
                 nnet.test(bandit = FIXED_BANDIT_PATH,   
-                          bandit_param_range = [0.1],
+                          bandit_param_range = TEST_SD,
                       n_runs = 1)
             
 

@@ -17,7 +17,7 @@ ARMS = 2
 # Number of trials (int)
 NUM_STEPS = 100
 # Number of runs to create with certain bandit specifications (int)
-NUM_RUNS = 1 
+NUM_RUNS = 10 
 # Number of reward instantiations given fixed reward probability, only relevant for binary rewards (int)
 NUM_RINS = 1
 # Standard deviation of Gaussian noise (float)

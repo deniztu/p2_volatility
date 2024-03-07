@@ -94,7 +94,7 @@ generated quantities{
   vector[4] pb;  // perseveration bonus
 
 	for (s in 1:nSubjects){
-	  
+
 	  h = rep_vector(initH, 4);
     v[s][,1] = rep_vector(v1, 4);
     sig[s][,1] = rep_vector(sig1, 4);
@@ -102,10 +102,10 @@ generated quantities{
     for (t in 1:nTrials) {
 
       if (choice[s, t] != 0) {
-  
+
         // phi: exploration bonus
         eb = phi[s] * sig[s][,t];
-        
+
         // print("t");
         // print(t);
         // print("choice");
@@ -118,32 +118,32 @@ generated quantities{
         // print(rho[s]);
         // print("h")
         // print(h);
-        
+
         log_lik[s, t] = categorical_logit_lpmf(choice[s, t] | beta[s] * (v[s][,t] + eb + rho[s]*h));
         predicted_choices[s, t] = categorical_logit_rng(beta[s] * (v[s][,t] + eb + rho[s]*h));
-  
+
         pe[s, t] = reward[s, t] - v[s][choice[s, t],t];  // prediction error
-        
+
         Kgain = sig[s][choice[s, t],t]^2 / (sig[s][choice[s, t],t]^2 + sigO^2); // Kalman gain
-        
-        v[s][,t+1] = v[s][,t]; // move current v to next trial 
+
+        v[s][,t+1] = v[s][,t]; // move current v to next trial
         v[s][choice[s, t], t+1] = v[s][choice[s, t],t] + Kgain * pe[s, t];  // value/mu updating (learning)
-        
+
         sig[s][,t+1] = sig[s][,t]; // move current sig to next trial
         sig[s][choice[s, t], t+1] = sqrt( (1-Kgain) * sig[s][choice[s, t],t]^2 ); // sigma updating
-        
+
         // recency weighted perseveration
         pb = rep_vector(0.0, 4);
         pb[choice[s, t]] = 1;
-        
+
         h = h + alpha_h[s]*(pb - h);
       }
-      
+
       if (choice[s, t] == 0) {
-        v[s][,t+1] = v[s][,t]; // move current v to next trial 
+        v[s][,t+1] = v[s][,t]; // move current v to next trial
         sig[s][,t+1] = sig[s][,t]; // move current sig to next trial
       }
-  
+
       v[s][,t+1] = decay * v[s][,t+1] + (1-decay) * decay_center;
       for (j in 1:4){
         sig[s][j,t+1] = sqrt( decay^2 * sig[s][j,t+1]^2 + sigD^2 );

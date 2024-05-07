@@ -203,7 +203,7 @@ p2 <- delta_waic_plot(df = df2, my_colors = human_colors, my_ylab = "Delta WAIC"
 p3 = ggarrange(p1, p2, nrow = 2, ncol = 1)
 
 # save plot
-ggsave('plots/model_comparison_dp.png', dpi = 600,  width = 10, height = 6)
+ggsave('plots/model_comparison_dp.svg', dpi = 600,  width = 10, height = 6)
 
 
 

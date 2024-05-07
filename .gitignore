@@ -13,6 +13,8 @@ data/intermediate_data/fixed_bandits/*
 data/intermediate_data/jasp_analysis/*
 data/intermediate_data/modeling/modeling_fits/*
 data/intermediate_data/modeling/preprocessed_data_for_modeling/*
+data/intermediate_data/modeling/human_ppred_choices.npy
+data/intermediate_data/modeling/rnn_ppred_choices.npy
 
 
 # exception
@@ -28,4 +30,11 @@ data/intermediate_data/modeling/preprocessed_data_for_modeling/*
 !data/intermediate_data/modeling/modeling_fits/.gitkeep
 !data/intermediate_data/modeling/preprocessed_data_for_modeling/.gitkeep
 !scripts/.gitkeep
+
+# data files
+!data/rnn_raw_data/lstm2_a2c_nh_48_lr_0_0001_n_u_p_0_5_ew_0_vw_0_5_dr_0_5_res_d_f_p_0_1_rt_con_a_4_n_300_te_50000_id*
+!data/human_raw_data/data_chakroun_wiehler*
+!data/intermediate_data/modeling/preprocessed_data_for_modeling/pp_data_lstm2_a2c_nh_48_lr_0_0001_n_u_p_0_5_ew_0_vw_0_5_dr_0_5_res_d_f_p_0_1_rt_con_a_4_n_300_te_50000_id_*
+!data/intermediate_data/modeling/preprocessed_data_for_modeling/pp_data_chakroun_placebo_human_bandit_data*
+
 .Rproj.user

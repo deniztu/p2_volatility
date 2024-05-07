@@ -137,14 +137,14 @@ plot_posterior_medians <- function(df, ylabel = 'Posterior Median', xlabel = '',
 
 # parameter plots
 p1 = plot_posterior_medians(df[df$par == 'beta',], legend = FALSE,
-                            my_tag = 'B', xlabel = bquote(beta))
+                            my_tag = 'b', xlabel = bquote(beta))
 p2 = plot_posterior_medians(df[df$par == 'rho',], ylabel = '',
-                            legend = FALSE, my_tag = 'C',
+                            legend = FALSE, my_tag = 'c',
                             xlabel = bquote(rho))
 p3 = plot_posterior_medians(df[df$par == 'alpha_h',], ylabel = '', legend = FALSE,
-                            my_tag = 'D', xlabel = bquote(alpha[h]))
+                            my_tag = 'd', xlabel = bquote(alpha[h]))
 p4 = plot_posterior_medians(df[df$par == 'phi',], ylabel = '', legend = FALSE,
-                            my_tag = 'E', xlabel = expression(phi))
+                            my_tag = 'e', xlabel = expression(phi))
 
 # quick look at median values 
 df %>%
@@ -267,7 +267,7 @@ ppred_plot <- ggplot(df) +
         axis.text.y = element_text(size = 20, face="bold"),
         plot.tag = element_text(size = 40, face = "bold")) + 
   ylab('Predictive accuracy') + 
-  xlab(MY_LABELS) + labs(tag = "A")
+  xlab(MY_LABELS) + labs(tag = "a")
 
 # quick look at mean values 
 df %>%
@@ -290,7 +290,7 @@ setwd('../')
 plot_grid(ppred_plot, p1, p2,p3,p4, labels = c('', '', ''), nrow = 1)
 
 # save
-ggsave("plots/figure_4_SM_EDP.png",   dpi = 1000,  width = 20, height = 4, unit = 'in')
+ggsave("plots/figure_4_SM_EDP.svg",   dpi = 1000,  width = 20, height = 4, unit = 'in')
 
 ##########################
 ### save df for jasp   ###

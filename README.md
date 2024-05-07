@@ -2,7 +2,7 @@
 
 This repository contains code for the following paper:
 
-[Human-level reinforcement learning performance of recurrent neural networks is linked to hyperperseveration, not directed exploration](https://doi.org/10.1101/2023.04.27.538570)
+[Exploration-exploitation mechanisms in recurrent neural networks and human learners in restless bandit problems](https://doi.org/10.1101/2023.04.27.538570)
 
 ## Install Requirements
 

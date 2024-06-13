@@ -77,9 +77,7 @@ p2_volatility
 │   │   │
 │   │   └───jasp_analysis
 │   │      
-│   └───rnn_raw_data
-│   │      
-│   └───human_raw_data
+│   └───rnn_raw_data     
 │
 └───doc
 │

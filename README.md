@@ -2,7 +2,7 @@
 
 This repository contains code for the following paper:
 
-[Exploration-exploitation mechanisms in recurrent neural networks and human learners in restless bandit problems](https://doi.org/10.1101/2023.04.27.538570)
+[A meta reinforcement learning account of behavioral adaptation to volatility in recurrent neural networks](https://www.biorxiv.org/content/10.1101/2024.05.09.593363)
 
 - **R** is used in ``scripts`` (.R files), ``cognitive models`` (.stan files) and to save/load data (.RData files)
 - **Python** is used in all .py files (main.py, classes) to train/test RNNs and in ``notebooks`` (**Jupyter Notebooks**) for analysis and plotting

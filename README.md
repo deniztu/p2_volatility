@@ -41,7 +41,7 @@ install.packages(r_pckgs)
 ## Directory Structure
 
 ```
-p1_generalization
+p2_volatility
 │   README.md
 │   main.py
 │   helpers.py
@@ -49,7 +49,7 @@ p1_generalization
 |   .gitignore
 |   environment.yaml
 |   helpers.py
-|   p1_generalization.RData
+|   p2_volatility.RData
 |   r_packages.RData
 |   renv.lock  
 │

@@ -1,4 +1,4 @@
-# RNN Generalization Project (P1)
+# RNN Volatility Project (P2)
 
 This repository contains code for the following paper:
 
